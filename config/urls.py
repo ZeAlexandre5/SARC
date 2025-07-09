@@ -19,4 +19,6 @@ from django.urls import path, include
 
 urlpatterns = [
     path('',include ("SARC.urls")),
+    path("reservas/", include("SARC.urls")),
+    path("salas/", include("SARC.urls")),
 ]

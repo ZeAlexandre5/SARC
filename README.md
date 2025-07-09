@@ -1,2 +1,18 @@
 # SARC
-um projeto criado com o intuito de ajudar os alunos do IFRN do campus São Paulo do Potengi. Que as vezes precisam dos computadores dos laboratórios para fazerem seus projetos, então decidimos começar um Projeto Integrador com o intuito de criar um site para fazer os agendamentos dos laboratórios.
+Projeto desenvolvido como parte do Projeto Integrador do curso no IFRN - Campus São Paulo do Potengi.
+
+O objetivo é auxiliar os alunos que precisam utilizar os computadores dos laboratórios, oferecendo uma plataforma online para agendamento de horários. Dessa forma, buscamos tornar o uso dos laboratórios mais organizado, acessível e eficiente para todos os estudantes.
+
+## 🔧 Tecnologias Utilizadas
+- Django
+- Bootstrap
+- HTML/CSS
+
+## 🎯 Objetivo
+Facilitar o agendamento dos laboratórios de informática do IFRN - Campus São Paulo do Potengi, promovendo organização e acessibilidade para os alunos.
+
+## 📌 Funcionalidades
+- Cadastro de usuários
+- Visualização de horários disponíveis
+- Agendamento de laboratórios
+
