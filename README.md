@@ -16,3 +16,7 @@ Facilitar o agendamento dos laboratórios de informática do IFRN - Campus São 
 - Visualização de horários disponíveis
 - Agendamento de laboratórios
 
+## 🧍🏻‍♂ Participantes do Projeto
+- José Alexandre
+- Paulo Gabriel
+- Artur Felipe
