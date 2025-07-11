@@ -9,3 +9,6 @@ def reserva(request):
 
 def salas(request):
     return render(request,"salas.html")
+
+def cadastro(request):
+    return render(request,"cadastro.html")
