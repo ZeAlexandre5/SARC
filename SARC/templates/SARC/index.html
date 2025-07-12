@@ -35,7 +35,7 @@
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
     <div class="container">
-      <a class="navbar-brand" href="#"><img src="{% static 'IMG/SARC IFNR.png' %}" alt="SARC IFRN"></a>
+      <a class="navbar-brand" href="#">{% block logo %}<img src="{% static 'IMG/IFRN.png' %}" height="50" width="50">{% endblock %}</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -53,7 +53,7 @@
     <div class="container">
       <h1>Sistema de Agendamento e Reservas de Computadores</h1>
       <p class="lead">Se estiver precisando reservar um computador do nosso campus para algum trabalho, clique no botão abaixo para ir fazer sua reserva agora <br>
-        <a href="#reservas" class="btn btn-primary btn-lg mt-3">Reservar Aqui</a></p>
+        <a href="{% url 'reservas' %}" class="btn btn-primary btn-lg mt-3">Reservar Aqui</a></p>
     </div>
   </section>
 
