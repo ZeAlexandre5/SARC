@@ -1,1 +1,259 @@
 {%load static %}
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SARC IFRN - Escolha de salas</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{%static 'SARC/css/estilo'%}">
+  <style>
+     .hero {
+      background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(77, 57, 57, 0.5)),
+                url('https://source.unsplash.com/1600x600/?computer,laboratory') center/cover no-repeat;
+      color: #fff;
+      padding: 100px 0;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+    }
+
+    .hero .btn {
+      font-size: 1.1rem;
+      padding: 10px 30px;
+    }
+    #navbar {
+  background-color: #940404; /* tom verde escuro, estilo IFRN */
+  padding: 1rem 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  text-align: center;
+  font-family: 'Arial', sans-serif;
+}
+
+/* Logo */
+#logo {
+  height: 100px; /* ajuste o tamanho como quiser */
+  width: auto;
+  position: relative;
+}
+
+/* Links da navbar */
+#navbar .nav-link {
+  color: #ffffff;
+  margin-left: 1rem;
+  transition: color 0.3s, border-bottom 0.3s;
+  position: relative;
+  font-weight: 500;
+}
+
+/* Hover nos links */
+#navbar .nav-link:hover {
+  color: #80cbc4; /* verde claro no hover */
+  text-decoration: none;
+}
+
+/* Link ativo */
+#navbar .nav-link.active {
+  color: #b2dfdb;
+  border-bottom: 2px solid #b2dfdb;
+}
+
+/* Botão hamburguer (padrão Bootstrap já é bom) */
+.navbar-toggler {
+  border: none;
+}
+
+/* Ajuste geral para colapso em mobile */
+@media (max-width: 991px) {
+  #navbar .navbar-nav {
+    background-color: #004d40;
+    padding: 1rem;
+    border-radius: 0.5rem;
+  }
+
+  #navbar .nav-link {
+    display: block;
+    margin: 0.5rem 0;
+  }
+}
+
+    .footer {
+      background-color: #940404;
+      padding: 1rem;
+      text-align: center;
+      color: white;
+    }
+    .container {
+      margin-top: 50px;
+    }
+  </style>
+</head>
+<nav class="navbar navbar-expand-lg" id="navbar">
+    <div class="container">
+      <a class="navbar-brand" href="{$$}" ><img src ="{% static 'SARC/IMG/SARC IFRN.png' %}" id="logo"></a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link" href="{% url 'index'%}">Início</a></li>
+                <li class="nav-item"><a class="nav-link active" href="{% url 'salas' %}">escolher salas</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'reservas' %}">Minhas Reservas</a></li>
+            </ul>            
+    </div>
+</nav>
+
+<body>
+  <div class="container my-5">
+    <h1 class="mb-4 text-center">Selecione uma Sala</h1>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+
+      <!-- Sala 1 -->
+      <div class="col">
+        <div class="card h-100 text-center">
+          <div class="card-body">
+            <h5 class="card-title">Sala 203</h5>
+            <p class="card-text">Laboratório de Informática 1</p>
+            <p class="card-qnt-alu">Capacidade: 30 alunos</p>
+            <p class="card-horarios">Horários disponíveis:
+                <br />
+                7:00 ás 8:30
+                <br />
+                8:50 ás 10:20
+                <br />
+                10:30 ás 12:00
+                <br />
+                13:00 ás 14:30
+                <br />
+                14:50 ás 16:20
+                <br />
+                16:30 ás 18:00
+            </p>
+            <a href="#" class="btn btn-primary">Selecionar</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sala 2 -->
+      <div class="col">
+        <div class="card h-100 text-center">
+          <div class="card-body">
+            <h5 class="card-title">Sala 204</h5>
+            <p class="card-text">Laboratório de Informática 2</p>
+            <p class="card-qnt-alu">Capacidade: 30 alunos</p>
+            <p class="card-horarios">Horários disponíveis:
+                <br />
+                7:00 ás 8:30
+                <br />
+                8:50 ás 10:20
+                <br />
+                10:30 ás 12:00
+                <br />
+                13:00 ás 14:30
+                <br />
+                14:50 ás 16:20
+                <br />
+                16:30 ás 18:00
+            </p>
+            <a href="#" class="btn btn-primary">Selecionar</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sala 3 -->
+      <div class="col">
+        <div class="card h-100 text-center">
+          <div class="card-body">
+            <h5 class="card-title">Sala 206</h5>
+            <p class="card-text">Laboratório de Informática 3</p>
+            <p class="card-qnt-alu">Capacidade: 30 alunos</p>
+            <p class="card-horarios">Horários disponíveis: 
+                <br />
+                7:00 ás 8:30
+                <br />
+                8:50 ás 10:20
+                <br />
+                10:30 ás 12:00
+                <br />
+                13:00 ás 14:30
+                <br />
+                14:50 ás 16:20
+                <br />
+                16:30 ás 18:00
+            </p>
+            <a href="#" class="btn btn-primary">Selecionar</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sala 4 -->
+      <div class="col">
+        <div class="card h-100 text-center">
+          <div class="card-body">
+            <h5 class="card-title">Sala 214</h5>
+            <p class="card-text">Laboratório de Informática 4</p>
+            <p class="card-qnt-alu">Capacidade: 30 alunos</p>
+            <p class="card-horarios">Horários disponíveis: 
+                <br />
+                7:00 ás 8:30
+                <br />
+                8:50 ás 10:20
+                <br />
+                10:30 ás 12:00
+                <br />
+                13:00 ás 14:30
+                <br />
+                14:50 ás 16:20
+                <br />
+                16:30 ás 18:00
+            </p>
+            <a href="#" class="btn btn-primary">Selecionar</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sala 5 -->
+      <div class="col">
+        <div class="card h-100 text-center">
+          <div class="card-body">
+            <h5 class="card-title">Sala de Estudos</h5>
+            <p class="card-text">Sala de Estudos</p>
+            <p class="card-qnt-alu">Capacidade: 10 alunos</p>
+            <p class="card-horarios">Horários disponíveis:
+                <br />
+                7:00 ás 8:30
+                <br />
+                8:50 ás 10:20
+                <br />
+                10:30 ás 12:00
+                <br />
+                13:00 ás 14:30
+                <br />
+                14:50 ás 16:20
+                <br />
+                16:30 ás 18:00
+            </p>
+            <a href="#" class="btn btn-primary">Selecionar</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+  <!-- Footer -->
+
+<footer class="footer">
+    <div class="container">
+      <p>&copy; 2025 SARC IFRN. Todos os direitos reservados.</p>
+    </div>
+  </footer>
