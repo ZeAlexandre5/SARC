@@ -5,4 +5,5 @@ urlpatterns = [
     path("reservas/", views.reserva, name="reservas"),
     path("salas/", views.salas, name="salas"),
     path("cadastro/", views.cadastro, name="cadastro"),
+    path("reservar sala/", views.reservar_sala, name="reservar_sala"),
 ]

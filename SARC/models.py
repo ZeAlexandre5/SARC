@@ -11,3 +11,20 @@ class Reserva(models.Model):
 
     def __str__(self):
         return f"Reserva {self.id_reserva} - {self.data} {self.horario} - {self.sala} - {self.motivo} - {'Presente' if self.presenca else 'Ausente'}"
+    
+class Usuario(models.Model):
+    id_usuario = models.AutoField(primary_key=True)
+    nome = models.CharField(max_length=100)
+    email = models.EmailField(unique=True)
+    senha = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"Usuário {self.id_usuario} - {self.nome} - {self.email}"
+    
+class Sala(models.Model):
+    id_sala = models.AutoField(primary_key=True)
+    nome = models.CharField(max_length=100)
+    capacidade = models.IntegerField()
+
+    def __str__(self):
+        return f"Sala {self.id_sala} - {self.nome} - Capacidade: {self.capacidade}"

@@ -13,3 +13,6 @@ def salas(request):
 
 def cadastro(request):
     return render(request,"Sarc/cadastro.html")
+
+def reservar_sala(request):
+    return render(request,"Sarc/reservar_sala.html")
