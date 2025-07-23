@@ -1,3 +1,4 @@
+{% extends 'SARC/base.html' %}
 {%load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -12,6 +13,7 @@
     </style>
 </head>
 <body>
+    {% block content %}
     <h1>Minhas Reservas</h1>
     {% if reservas %}
         <table>
@@ -42,5 +44,6 @@
         <p>Você não realizou nenhuma reserva.</p>
     {% endif %}
     <a href="{% url 'salas' %}" class="btn btn-primary">Fazer uma Nova Reserva</a>
+    {% endblock %}
 </body>
 </html>
