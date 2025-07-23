@@ -28,3 +28,11 @@ class Sala(models.Model):
 
     def __str__(self):
         return f"Sala {self.id_sala} - {self.nome} - Capacidade: {self.capacidade}"
+    
+class Computador(models.Model):
+    id_computador = models.AutoField(primary_key=True)
+    sala = models.ForeignKey(Sala, on_delete=models.CASCADE)
+    numero = models.CharField(max_length=10)
+
+    def __str__(self):
+        return f"Computador {self.id_computador} - Sala: {self.sala.nome} - Número: {self.numero}"

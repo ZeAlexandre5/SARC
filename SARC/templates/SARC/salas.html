@@ -143,7 +143,7 @@
       <!-- Sala 2 -->
       <div class="col">
         <div class="card h-100 text-center">
-          <div class="card-body">
+          <div class="card-body" id="{{ sala.id_sala }}">
             <h5 class="card-title">Sala 204</h5>
             <p class="card-text">Laboratório de Informática 2</p>
             <p class="card-qnt-alu">Capacidade: 30 alunos</p>
@@ -161,7 +161,7 @@
                 <br />
                 16:30 ás 18:00
             </p>
-            <a href="{% url 'reservar_sala' %}" class="btn btn-primary">Selecionar</a>
+            <a href="{% url 'reservar_sala' sala.id_sala %}" class="btn btn-primary">Selecionar</a>
           </div>
         </div>
       </div>

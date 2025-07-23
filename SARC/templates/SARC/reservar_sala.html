@@ -96,6 +96,15 @@
       text-align: center;
       font-family: 'Arial', sans-serif;
     }
+
+    .section {
+      margin: 2rem 0;
+      background-color: #80cbc4;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+    }
 </style>
 
 <nav class="navbar navbar-expand-lg" id="navbar">
@@ -118,21 +127,18 @@
         
         <div class="section">
             <h2>Selecione o Horário</h2>
-            <div class="time-slots" id="timeSlots">
                 <!-- Horários serão preenchidos via JavaScript -->
-                 <select name="time" id="timeSelect"></select>
-                 <script>
-                     const timeSelect = document.getElementById('timeSelect');
-                     database.timeSlots.forEach(slot => {
-                         const option = document.createElement('option');
-                         option.value = slot;
-                         option.textContent = slot;
-                         timeSelect.appendChild(option);
-                     });
-                 </script>
+                 <select name="time">
+                    <option value="time1">07:00 - 08:30</option>
+                    <option value="time2">08:50 - 10:20</option>
+                    <option value="time3">10:30 - 12:00</option>
+                    <option value="time4">13:00 - 14:30</option>
+                    <option value="time5">14:50 - 16:20</option>
+                    <option value="time6">16:30 - 18:00</option>
+                  </select>
             </div>
         </div>
-        <div class="section reservation-form" id="reservationForm" style="display: none;">
+        <div class="section">
             <h2>Detalhes da Reserva</h2>
             <form id="id_sala">
                 <div class="form-group">
@@ -150,7 +156,7 @@
                 <input type="hidden" id="selectedRoom">
                 <input type="hidden" id="selectedComputer">
                 <input type="hidden" id="selectedTime">
-                <button type="submit">Confirmar Reserva</button>
+                <center><button type="submit" class="btn btn-primary">Confirmar Reserva</button></center>
             </form>
         </div>
     </div>
