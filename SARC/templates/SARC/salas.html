@@ -117,36 +117,11 @@
       <!-- Sala 1 -->
       <div class="col">
         <div class="card h-100 text-center">
+          {% for sala in salas %}
           <div class="card-body">
-            <h5 class="card-title">Sala 203</h5>
-            <p class="card-text">Laboratório de Informática 1</p>
-            <p class="card-qnt-alu">Capacidade: 30 alunos</p>
-            <p class="card-horarios">Horários disponíveis:
-                <br />
-                7:00 ás 8:30
-                <br />
-                8:50 ás 10:20
-                <br />
-                10:30 ás 12:00
-                <br />
-                13:00 ás 14:30
-                <br />
-                14:50 ás 16:20
-                <br />
-                16:30 ás 18:00
-            </p>
-            <a href="{% url 'reservar_sala' %}" class="btn btn-primary">Selecionar</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Sala 2 -->
-      <div class="col">
-        <div class="card h-100 text-center">
-          <div class="card-body" id="{{ sala.id_sala }}">
-            <h5 class="card-title">Sala 204</h5>
-            <p class="card-text">Laboratório de Informática 2</p>
-            <p class="card-qnt-alu">Capacidade: 30 alunos</p>
+            <h5 class="card-title">{{ sala.nome }}</h5>
+            <p class="card-text">{{ sala.descricao }}</p>
+            <p class="card-qnt-alu">Capacidade: {{ sala.capacidade }} alunos</p>
             <p class="card-horarios">Horários disponíveis:
                 <br />
                 7:00 ás 8:30
@@ -165,87 +140,7 @@
           </div>
         </div>
       </div>
-
-      <!-- Sala 3 -->
-      <div class="col">
-        <div class="card h-100 text-center">
-          <div class="card-body">
-            <h5 class="card-title">Sala 206</h5>
-            <p class="card-text">Laboratório de Informática 3</p>
-            <p class="card-qnt-alu">Capacidade: 30 alunos</p>
-            <p class="card-horarios">Horários disponíveis: 
-                <br />
-                7:00 ás 8:30
-                <br />
-                8:50 ás 10:20
-                <br />
-                10:30 ás 12:00
-                <br />
-                13:00 ás 14:30
-                <br />
-                14:50 ás 16:20
-                <br />
-                16:30 ás 18:00
-            </p>
-            <a href="{% url 'reservar_sala' %}" class="btn btn-primary">Selecionar</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Sala 4 -->
-      <div class="col">
-        <div class="card h-100 text-center">
-          <div class="card-body">
-            <h5 class="card-title">Sala 214</h5>
-            <p class="card-text">Laboratório de Informática 4</p>
-            <p class="card-qnt-alu">Capacidade: 30 alunos</p>
-            <p class="card-horarios">Horários disponíveis: 
-                <br />
-                7:00 ás 8:30
-                <br />
-                8:50 ás 10:20
-                <br />
-                10:30 ás 12:00
-                <br />
-                13:00 ás 14:30
-                <br />
-                14:50 ás 16:20
-                <br />
-                16:30 ás 18:00
-            </p>
-            <a href="{% url 'reservar_sala' %}" class="btn btn-primary">Selecionar</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Sala 5 -->
-      <div class="col">
-        <div class="card h-100 text-center">
-          <div class="card-body">
-            <h5 class="card-title">Sala de Estudos</h5>
-            <p class="card-text">Sala de Estudos</p>
-            <p class="card-qnt-alu">Capacidade: 10 alunos</p>
-            <p class="card-horarios">Horários disponíveis:
-                <br />
-                7:00 ás 8:30
-                <br />
-                8:50 ás 10:20
-                <br />
-                10:30 ás 12:00
-                <br />
-                13:00 ás 14:30
-                <br />
-                14:50 ás 16:20
-                <br />
-                16:30 ás 18:00
-            </p>
-            <a href="{% url 'reservar_sala' %}" class="btn btn-primary">Selecionar</a>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
+      {% endfor %}
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
