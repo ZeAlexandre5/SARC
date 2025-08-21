@@ -16,6 +16,14 @@
       padding: 100px 0;
       text-align: center;
     }
+    header {
+      background-color: #940404; /* tom verde escuro, estilo IFRN */
+      padding: 1rem 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      text-align: center;
+      font-family: 'Arial', sans-serif;
+      color: white;
+    }
 
     .hero h1 {
       font-size: 2.5rem;
@@ -97,20 +105,12 @@
 <body>
 
   <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg" id="navbar">
-    <div class="container">
-      <a class="navbar-brand" href="{% url 'index' %}" ><img src ="{% static 'SARC/IMG/SARC IFRN.png' %}" id="logo"></a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-        <ul class="navbar-nav">
-          <li class="nav-item"><a class="nav-link active" href="#">Início</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'cadastro' %}">Cadastrar-se</a></li>
-        </ul>
-      </div>
-    </div>
-  </nav>
+  <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom"> 
+    <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none"> 
+      <svg class="bi me-2" width="40" height="32" aria-hidden="true"><use xlink:href="#bootstrap"></use></svg> <span class="fs-4"><img src="{% static 'SARC/img/SARC IFRN.png' %}" alt="Logo SARC"></span> </a> <ul class="nav nav-pills"> 
+        <li class="nav-item"><a href="{% url 'index' %}" class="nav-link active" aria-current="page">Inicio</a></li> <li class="nav-item"><a href="{% url 'reservas' %}" class="nav-link">Reservas</a></li> 
+        <li class="nav-item"><a href="{% url 'salas' %}" class="nav-link">Nova Reserva</a></li>
+        </ul> </header>
 
   <!-- Hero Section -->
   <section class="hero">
