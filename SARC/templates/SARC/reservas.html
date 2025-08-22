@@ -93,14 +93,13 @@
             <div class="table_reservas"></div>
                 <tbody>
                     {% for reserva in reservas %}
-                    <tr>
+                      <tr>
                         <td>{{ reserva.id }}</td>
                         <td>{{ reserva.data }}</td>
                         <td>{{ reserva.horario }}</td>
                         <td>{{ reserva.sala }}</td>
                         <td>{{ reserva.motivo }}</td>
-                        <td>{{ reserva.presenca }}</td>
-                    </tr>
+                      </tr>
                     {% endfor %}
             </tbody>
         </table>

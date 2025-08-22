@@ -1,5 +1,5 @@
 from django.db import models
-
+from django import forms
 # Create your models here.
 class Reserva(models.Model):
     id_reserva = models.AutoField(primary_key=True)
@@ -17,9 +17,10 @@ class Usuario(models.Model):
     nome = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     senha = models.CharField(max_length=100)
+    matricula = models.CharField(max_length=20, unique=True, null=True, blank=True)
 
     def __str__(self):
-        return f"Usuário {self.id_usuario} - {self.nome} - {self.email}"
+        return f"Usuário {self.id_usuario} - {self.nome} - {self.email} - Matrícula: {self.matricula}"
     
 class Sala(models.Model):
     id_sala = models.AutoField(primary_key=True)
@@ -36,3 +37,11 @@ class Computador(models.Model):
 
     def __str__(self):
         return f"Computador {self.id_computador} - Sala: {self.sala.nome} - Número: {self.numero}"
+    
+class UsuarioForm(forms.ModelForm):
+    class Meta:
+        model = Usuario
+        fields = ['matricula', 'nome', 'email', 'senha']
+        widgets = {
+            'senha': forms.PasswordInput(),  # Campo de senha oculto
+        }
