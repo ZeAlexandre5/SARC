@@ -13,7 +13,17 @@
       padding: 100px 0;
       text-align: center;
     }
-
+    header {
+      background-color: #940404; /* tom verde escuro, estilo IFRN */
+      padding: 1rem 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      text-align: center;
+      font-family: 'Arial', sans-serif;
+      color: white;
+    }
+    header, header a, header ul li a, header span, header svg {
+  color: #fff !important;
+}
     .hero h1 {
       font-size: 2.5rem;
       font-weight: bold;
@@ -94,56 +104,41 @@
     }
   </style>
 </head>
-<nav class="navbar navbar-expand-lg" id="navbar">
-    <div class="container">
-      <a class="navbar-brand" href="{$$}" ><img src ="{% static 'SARC/IMG/SARC IFRN.png' %}" id="logo"></a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-            <ul class="navbar-nav">
-                <li class="nav-item"><a class="nav-link" href="{% url 'index'%}">Início</a></li>
-                <li class="nav-item"><a class="nav-link active" href="{% url 'salas' %}">escolher salas</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'reservas' %}">Minhas Reservas</a></li>
-            </ul>            
-    </div>
-</nav>
+ <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom"> 
+    <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none"> 
+      <svg class="bi me-2" width="40" height="32" aria-hidden="true"><use xlink:href="#bootstrap"></use></svg> <span class="fs-4"><img src="{% static 'SARC/img/SARC IFRN.png' %}" alt="Logo SARC"></span> </a> <ul class="nav nav-pills"> 
+        <li class="nav-item"><a href="{% url 'index' %}" class="nav-link">Inicio</a></li> <li class="nav-item"><a href="{% url 'reservas' %}" class="nav-link">Reservas</a></li> 
+        <li class="nav-item"><a href="{% url 'salas' %}" class="nav-link active" aria-current="page">Nova Reserva</a></li>
+        </ul> </header>
 
 <body>
-  <div class="container my-5">
     <h1 class="mb-4 text-center">Selecione uma Sala</h1>
     <div class="row row-cols-1 row-cols-md-3 g-4">
-
-      <!-- Sala 1 -->
+      {% for sala in salas %}
       <div class="col">
         <div class="card h-100 text-center">
-          {% for sala in salas %}
           <div class="card-body">
             <h5 class="card-title">{{ sala.nome }}</h5>
-            <p class="card-text">{{ sala.descricao }}</p>
-            <p class="card-qnt-alu">Capacidade: {{ sala.capacidade }} alunos</p>
-            <p class="card-horarios">Horários disponíveis:
-                <br />
-                7:00 ás 8:30
-                <br />
-                8:50 ás 10:20
-                <br />
-                10:30 ás 12:00
-                <br />
-                13:00 ás 14:30
-                <br />
-                14:50 ás 16:20
-                <br />
-                16:30 ás 18:00
-            </p>
-            <a href="{% url 'reservar_sala' sala.id_sala %}" class="btn btn-primary">Selecionar</a>
+            <p class="card-text">Capacidade: {{ sala.capacidade }} alunos</p>
+            <h6>Computadores:</h6>
+            <ul>
+              {% for computador in computadores %}
+                {% if computador.sala.id_sala == sala.id_sala %}
+                  <li>Computador {{ computador.numero }}</li>
+                {% endif %}
+              {% endfor %}
+            </ul>
+            <a href="#" class="btn btn-primary">Selecionar</a>
           </div>
         </div>
       </div>
       {% endfor %}
+    </div>
+</div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+<br>
 
   <!-- Footer -->
 

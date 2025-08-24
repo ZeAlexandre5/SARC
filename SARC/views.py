@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from datetime import date
-from .models import Reserva
+from .models import Reserva,Sala,Computador
 from .forms import UsuarioForm
 # ...existing code...
 
@@ -31,13 +31,15 @@ def reserva(request):
 def salas(request):
     today = date.today()
     reservas = Reserva.objects.filter(data=today)
+    salas = Sala.objects.all()
+    computadores = Computador.objects.all()
     context = {
+        'salas': salas,
+        'computadores': computadores,
         'reservas': reservas,
     }
-    return render(request,"SARC/salas.html", context)
+    return render(request, "SARC/salas.html", context)
 
-def cadastro(request):
-    return render(request,"SARC/cadastro.html")
 
 def reservar_sala(request):
     return render(request,"SARC/reservar_sala.html")

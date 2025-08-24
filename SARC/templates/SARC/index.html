@@ -1,5 +1,4 @@
 {%load static %}
-{% block title %}SARC IFRN - Página Inicial{% endblock %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -23,6 +22,9 @@
       text-align: center;
       font-family: 'Arial', sans-serif;
       color: white;
+    }
+    header, header a, header ul li a, header span, header svg {
+     color: #fff !important;
     }
 
     .hero h1 {
@@ -110,6 +112,7 @@
       <svg class="bi me-2" width="40" height="32" aria-hidden="true"><use xlink:href="#bootstrap"></use></svg> <span class="fs-4"><img src="{% static 'SARC/img/SARC IFRN.png' %}" alt="Logo SARC"></span> </a> <ul class="nav nav-pills"> 
         <li class="nav-item"><a href="{% url 'index' %}" class="nav-link active" aria-current="page">Inicio</a></li> <li class="nav-item"><a href="{% url 'reservas' %}" class="nav-link">Reservas</a></li> 
         <li class="nav-item"><a href="{% url 'salas' %}" class="nav-link">Nova Reserva</a></li>
+         <li class="nav-item"><a href="{% url 'cadastro' %}" class="nav-link">Cadastrar-se</a></li>
         </ul> </header>
 
   <!-- Hero Section -->

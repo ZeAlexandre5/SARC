@@ -28,6 +28,8 @@
     <h2 class="mb-4 text-center">Cadastro</h2>
     {% if success %}
       <div class="alert alert-success">Cadastro realizado com sucesso!</div>
+      <br>
+      <div><a href="{% url 'index' %}" class="btn btn-primary">Voltar para o Início</a></div>
     {% endif %}
     <form method="post">
       {% csrf_token %}

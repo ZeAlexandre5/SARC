@@ -4,27 +4,43 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Minhas Reservas</title>
+    <title>SARC IFRN - Minhas Reservas</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 2em; }
+        body { font-family: Arial, sans-serif; margin: 2em; height: 100vh; width: 100%; }
         table { border-collapse: collapse; width: 100%; }
         th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
         th { background-color: #f2f2f2; }
 
- #navbar {
-  background-color: #940404; /* tom verde escuro, estilo IFRN */
-  padding: 1rem 0;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  text-align: center;
-  font-family: 'Arial', sans-serif;
-}
+        header {
+          background-color: #940404; /* tom verde escuro, estilo IFRN */
+          padding: 1rem 0;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          text-align: center;
+          font-family: 'Arial', sans-serif;
+          color: white;
+          }
+        .hero {
+          background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(77, 57, 57, 0.5)),
+                url('https://source.unsplash.com/1600x600/?computer,laboratory') center/cover no-repeat;
+          color: #fff;
+          padding: 100px 0;
+          text-align: center;
+          font-family: 'Arial', sans-serif;}
+          .hero h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        }
 
-/* Logo */
-#logo {
-  height: 100px; /* ajuste o tamanho como quiser */
-  width: auto;
-  position: relative;
-}
+        /* Logo */
+        #logo {
+            height: 100px; /* ajuste o tamanho como quiser */
+            width: auto;
+            position: relative;
+            top: 10px;
+            margin-right: 20px;
+        }
 
 /* Links da navbar */
 #navbar .nav-link {
@@ -87,14 +103,17 @@
 </head>
 <body>
     {% block content %}
-    <center><h1>Minhas Reservas</h1></center>
+    <div class="hero">
+      <center><h1>Minhas Reservas</h1></center>
+    </div>
+    <br>
     {% if reservas %}
         <table>
             <div class="table_reservas"></div>
                 <tbody>
                     {% for reserva in reservas %}
                       <tr>
-                        <td>{{ reserva.id }}</td>
+                        <td>{{ reserva.usuario.nome }}</td>
                         <td>{{ reserva.data }}</td>
                         <td>{{ reserva.horario }}</td>
                         <td>{{ reserva.sala }}</td>
@@ -106,7 +125,11 @@
     {% else %}
         <center><h2>Você não realizou nenhuma reserva.</h2></center>
     {% endif %}
+    <br>
     <center><a href="{% url 'salas' %}" class="btn btn-primary">Fazer uma Nova Reserva</a></center>
     {% endblock %}
+    <br><br>
+    <footer class="footer">
+      <p>&copy; 2025 SARC IFRN. Todos os direitos reservados.</p>
 </body>
 </html>
