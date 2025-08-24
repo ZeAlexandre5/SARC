@@ -1,7 +1,8 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 from datetime import date
-from .models import Reserva,Sala,Computador
-from .forms import UsuarioForm
+from .models import Reserva,Sala,Computador,Usuario
+from .forms import UsuarioForm,LoginForm
+from django.contrib.auth.decorators import login_required
 # ...existing code...
 
 def cadastro(request):
@@ -13,6 +14,24 @@ def cadastro(request):
     else:
         form = UsuarioForm()
     return render(request, "SARC/cadastro.html", {'form': form})
+
+def login(request):
+    erro = None
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            matricula = form.cleaned_data['matricula']
+            senha = form.cleaned_data['senha']
+            try:
+                usuario = Usuario.objects.get(matricula=matricula, senha=senha)
+                request.session['usuario_id'] = usuario.id_usuario  # Salva o id do usuário na sessão
+                request.session['usuario_nome'] = usuario.nome
+                return redirect('reservas')
+            except Usuario.DoesNotExist:
+                erro = "Matrícula ou senha inválidos."
+    else:
+        form = LoginForm()
+    return render(request, "SARC/Login.html", {'form': form, 'erro': erro})
 # ...existing code...
 
 # Create your views here.
@@ -20,7 +39,11 @@ def index(request):
     return render(request,"SARC/index.html")
 
 def reserva(request):
-    reservas = Reserva.objects.all()
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+    usuario = Usuario.objects.get(id_usuario=usuario_id)
+    reservas = Reserva.objects.filter(usuario=usuario)
     today = date.today()
     reservas = reservas.filter(data=today)
     context = {
@@ -43,3 +66,5 @@ def salas(request):
 
 def reservar_sala(request):
     return render(request,"SARC/reservar_sala.html")
+
+

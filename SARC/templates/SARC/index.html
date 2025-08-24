@@ -14,6 +14,7 @@
       color: #fff;
       padding: 100px 0;
       text-align: center;
+      font-family: 'Times New Roman', serif;
     }
     header {
       background-color: #940404; /* tom verde escuro, estilo IFRN */
@@ -112,13 +113,13 @@
       <svg class="bi me-2" width="40" height="32" aria-hidden="true"><use xlink:href="#bootstrap"></use></svg> <span class="fs-4"><img src="{% static 'SARC/img/SARC IFRN.png' %}" alt="Logo SARC"></span> </a> <ul class="nav nav-pills"> 
         <li class="nav-item"><a href="{% url 'index' %}" class="nav-link active" aria-current="page">Inicio</a></li> <li class="nav-item"><a href="{% url 'reservas' %}" class="nav-link">Reservas</a></li> 
         <li class="nav-item"><a href="{% url 'salas' %}" class="nav-link">Nova Reserva</a></li>
-         <li class="nav-item"><a href="{% url 'cadastro' %}" class="nav-link">Cadastrar-se</a></li>
+         <li class="nav-item"><a href="{% url 'login' %}" class="nav-link">Cadastrar-se</a></li>
         </ul> </header>
 
   <!-- Hero Section -->
   <section class="hero">
     <div class="container">
-      <h1>Sistema de Agendamento e Reservas de Computadores</h1>
+      <h1 class="display-4 fst-italic">Sistema de Agendamento e Reservas de Computadores</h1>
       <p class="lead">Se estiver precisando reservar um computador do nosso campus para algum trabalho, clique no botão abaixo para ir fazer sua reserva agora <br>
         <a href="{% url 'reservas' %}" class="btn btn-primary btn-lg mt-3">Reservar Aqui</a></p>
     </div>

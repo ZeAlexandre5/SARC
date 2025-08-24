@@ -8,3 +8,7 @@ class UsuarioForm(forms.ModelForm):
         widgets = {
             'senha': forms.PasswordInput(),
         }
+
+class LoginForm(forms.Form):
+    matricula = forms.CharField(max_length=20)
+    senha = forms.CharField(widget=forms.PasswordInput())
