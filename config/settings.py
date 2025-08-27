@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-jq)$gn)(7dw*f#^(9209*d@@h1s^14nlc*3j9@&z=1kos^iom3
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'PauloGLF.pythonanywhere.com','44.229.227.142']
+ALLOWED_HOSTS = ['127.0.0.1', 'PauloGLF.pythonanywhere.com','https://sarc-qena.onrender.com']
 
 
 # Application definition
