@@ -7,11 +7,17 @@
   <link rel="stylesheet" href="{%static 'SARC/css/estilo'%}">
   <style>
      .hero {
-      background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(77, 57, 57, 0.5)),
+      background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(129, 104, 104, 0.5)),
                 url('https://source.unsplash.com/1600x600/?computer,laboratory') center/cover no-repeat;
       color: #fff;
+      height: 60vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
       padding: 100px 0;
       text-align: center;
+      font-family: 'Times New Roman', serif;
     }
     header {
       background-color: #940404; /* tom verde escuro, estilo IFRN */
@@ -98,9 +104,16 @@
       padding: 1rem;
       text-align: center;
       color: white;
+      margin-top: auto;
     }
     .container {
       margin-top: 50px;
+    }
+    body, html {
+      height: 100%;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
     }
   </style>
 </head>
@@ -112,7 +125,7 @@
         </ul> </header>
 
 <body>
-    <h1 class="mb-4 text-center">Selecione uma Sala</h1>
+    <h1 class="hero mb-4 text-center">Selecione uma Sala</h1>
     <div class="row row-cols-1 row-cols-md-3 g-4">
       {% for sala in salas %}
       <div class="col">
