@@ -22,13 +22,12 @@ def login(request):
         if form.is_valid():
             matricula = form.cleaned_data['matricula']
             senha = form.cleaned_data['senha']
-            try:
-                usuario = Usuario.objects.get(matricula=matricula, senha=senha)
-                request.session['usuario_id'] = usuario.id_usuario  # Salva o id do usuário na sessão
-                request.session['usuario_nome'] = usuario.nome
-                return redirect('reservas')
-            except Usuario.DoesNotExist:
-                erro = "Matrícula ou senha inválidos."
+
+            usuario = Usuario.objects.get(matricula=matricula, senha=senha)
+            
+            request.session['usuario_id'] = usuario.id_usuario  # Salva o id do usuário na sessão
+            request.session['usuario_nome'] = usuario.nome
+            return redirect('reservas')
     else:
         form = LoginForm()
     return render(request, "SARC/Login.html", {'form': form, 'erro': erro})
