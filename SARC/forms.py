@@ -1,5 +1,6 @@
 from django import forms
-from .models import Usuario
+from django.core.exceptions import ValidationError
+from .models import Usuario, Reserva, Sala, Computador
 
 class UsuarioForm(forms.ModelForm):
     class Meta:
@@ -25,3 +26,23 @@ class LoginForm(forms.Form):
                 raise forms.ValidationError("Matrícula ou senha inválidos.")
         
         return cleaned_data
+
+class SalaForm(forms.ModelForm):
+    class Meta:
+        model = Sala
+        fields = ['nome', 'capacidade']
+
+class ComputadorForm(forms.ModelForm):
+    class Meta:
+        model = Computador
+        fields = ['sala', 'numero', 'estado']
+
+class ReservaForm(forms.ModelForm):
+    class Meta:
+        model = Reserva
+        fields = ['data', 'horario', 'sala', 'motivo']
+
+        widgets = {
+            'data': forms.DateInput(attrs={'type': 'date'}),
+            'horario': forms.TimeInput(attrs={'type': 'time'}),
+        }

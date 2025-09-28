@@ -12,18 +12,6 @@ class Usuario(models.Model):
     def __str__(self):
         return f"Usuário {self.id_usuario} - {self.nome} - {self.email} - Matrícula: {self.matricula}"
 
-class Reserva(models.Model):
-    id_reserva = models.AutoField(primary_key=True)
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
-    data = models.DateField()
-    horario = models.TimeField()
-    sala = models.CharField(max_length=100)
-    motivo = models.TextField()
-    presenca = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"Reserva {self.id_reserva} - {self.data} {self.horario} - {self.sala} - {self.motivo} - {'Presente' if self.presenca else 'Ausente'}"
-    
 class Sala(models.Model):
     id_sala = models.AutoField(primary_key=True)
     nome = models.CharField(max_length=100)
@@ -36,10 +24,25 @@ class Computador(models.Model):
     id_computador = models.AutoField(primary_key=True)
     sala = models.ForeignKey(Sala, on_delete=models.CASCADE)
     numero = models.CharField(max_length=10)
+    estado = models.CharField(max_length=20, default='Disponível') 
+
 
     def __str__(self):
         return f"Computador {self.id_computador} - Sala: {self.sala.nome} - Número: {self.numero}"
     
+class Reserva(models.Model):
+    id_reserva = models.AutoField(primary_key=True)
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    data = models.DateField()
+    horario = models.TimeField()
+    sala = models.ForeignKey(Sala, on_delete=models.CASCADE)
+    computador = models.ForeignKey(Computador, on_delete=models.SET_NULL, null=True, blank=True)
+    motivo = models.TextField()
+    presenca = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Reserva {self.id_reserva} - {self.data} {self.horario} - {self.sala} - {self.motivo} - {'Presente' if self.presenca else 'Ausente'}"
+
 class UsuarioForm(forms.ModelForm):
     class Meta:
         model = Usuario
