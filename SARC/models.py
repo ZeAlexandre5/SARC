@@ -3,14 +3,26 @@ from django import forms
 # Create your models here.
     
 class Usuario(models.Model):
+    # Opções para o campo funcao
+    FUNCAO_CHOICES = [
+        ('professor', 'Professor'),
+        ('aluno', 'Aluno'),
+        ('bolsista', 'Bolsista'),
+    ]
+    
     id_usuario = models.AutoField(primary_key=True)
     nome = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     senha = models.CharField(max_length=100)
     matricula = models.CharField(max_length=20, unique=True, null=True, blank=True)
+    funcao = models.CharField(
+        max_length=20, 
+        choices=FUNCAO_CHOICES,
+        default='aluno'  # Opcional: define um valor padrão
+    )
 
     def __str__(self):
-        return f"Usuário {self.id_usuario} - {self.nome} - {self.email} - Matrícula: {self.matricula}"
+        return f"Usuario {self.id_usuario} - {self.nome} - {self.email} - Matricula: {self.matricula}"
 
 class Sala(models.Model):
     id_sala = models.AutoField(primary_key=True)
