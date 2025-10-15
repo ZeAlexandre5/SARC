@@ -23,11 +23,11 @@ def login_view(request):
 
             # Verifica o tipo de usuário e redireciona
             if user.groups.filter(name='aluno').exists():
-                return redirect('home_alu')  # Nome da URL para a página do aluno
+                return redirect("home_usu")  # Nome da URL para a página do aluno
             elif user.groups.filter(name='professor').exists():
-                return redirect('home_pro')  # Nome da URL para a página do professor
+                return redirect("home_pro")  # Nome da URL para a página do professor
             elif user.groups.filter(name='bolsista').exists():
-                return redirect('home_bol')  # Nome da URL para a página do bolsista
+                return redirect('home_bol')  # Nome da URL para a páginbolsistaa do 
             else:
                 return redirect('default_home')  # Página padrão caso não se encaixe em nenhum grupo
         else:
@@ -97,8 +97,8 @@ def reservar_sala(request):
     return render(request,"SARC/reservar_sala.html")
 
 @login_required
-def home_alu(request):
-    return render(request,"SARC/home_alu.html")
+def home_usu(request):
+    return render(request,"SARC/home_usu.html")
 
 @login_required
 def home_pro(request):
