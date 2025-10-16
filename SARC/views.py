@@ -27,7 +27,7 @@ def login_view(request):
             elif user.groups.filter(name='professor').exists():
                 return redirect("home_pro")  # Nome da URL para a página do professor
             elif user.groups.filter(name='bolsista').exists():
-                return redirect('home_bol')  # Nome da URL para a páginbolsistaa do 
+                return redirect('home_bol')  # Nome da URL para a página do bolsista
             else:
                 return redirect('default_home')  # Página padrão caso não se encaixe em nenhum grupo
         else:
