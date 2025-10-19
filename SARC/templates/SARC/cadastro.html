@@ -47,6 +47,7 @@
       box-sizing: border-box;
     }
     
+    
     form select:focus {
       border-color: #940404;
       box-shadow: 0 0 0 0.2rem rgba(148, 4, 4, 0.25);
@@ -97,7 +98,7 @@
       <div class="alert alert-success">Cadastro realizado com sucesso!</div>
       <br>
       <div class="text-center">
-        <a href="{% url 'login' %}" class="btn btn-primary">Voltar para o Início</a>
+        <a href="{% url 'index' %}" class="btn btn-primary">Voltar para o Início</a>
       </div>
     {% else %}
       {% if error %}
@@ -111,7 +112,7 @@
       </form>
       
       <div class="text-center mt-3">
-        <a href="{% url 'login' %}" class="btn btn-secondary">Voltar</a>
+        <a href="{% url 'index' %}" class="btn btn-secondary">Voltar para Login</a>
       </div>
     {% endif %}
   </div>

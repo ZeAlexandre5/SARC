@@ -5,29 +5,27 @@ from .models import Usuario, Reserva, Sala, Computador
 class UsuarioForm(forms.ModelForm):
     class Meta:
         model = Usuario
-        fields = ['nome', 'matricula', 'email', 'senha', 'tipo_usuario']  # ajuste os campos conforme seu model
+        fields = ['nome', 'matricula', 'email', 'senha', 'tipo_usuario']
         widgets = {
             'senha': forms.PasswordInput(),
             'tipo_usuario': forms.Select(),
         }
 
-
 class LoginForm(forms.Form):
     matricula = forms.CharField(max_length=20)
     senha = forms.CharField(widget=forms.PasswordInput())
 
-    def clean_usuario(self):
-        cleaned_data = super().clean()
-        matricula = cleaned_data.get('matricula')
-        senha = cleaned_data.get('senha')
-        
+    def clean(self):
+        cleaned = super().clean()
+        matricula = cleaned.get('matricula')
+        senha = cleaned.get('senha')
         if matricula and senha:
             try:
                 usuario = Usuario.objects.get(matricula=matricula, senha=senha)
+                self.user = usuario  # disponível para a view após validação
             except Usuario.DoesNotExist:
                 raise forms.ValidationError("Matrícula ou senha inválidos.")
-        
-        return cleaned_data
+        return cleaned
 
 class SalaForm(forms.ModelForm):
     class Meta:
