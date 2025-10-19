@@ -13,33 +13,107 @@
       align-items: center;
       justify-content: center;
       height: 100vh;
+      margin: 0;
     }
-    .login-container {
+    .cadastro-container {
       max-width: 400px;
+      width: 100%;
       background: white;
-      padding: 2rem;
+      padding: 2.5rem;
       border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border: 2px solid #940404;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      margin: 20px;
+    }
+    
+    /* Estilização do form.as_p */
+    form p {
+      margin-bottom: 1.5rem;
+    }
+    
+    form label {
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: #333;
+      display: block;
+    }
+    
+    
+    form select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    
+    form select:focus {
+      border-color: #940404;
+      box-shadow: 0 0 0 0.2rem rgba(148, 4, 4, 0.25);
+      outline: none;
+    }
+    
+    .btn-primary {
+      background-color: #940404;
+      border-color: #940404;
+      padding: 0.75rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+      width: 100%;
+    }
+    
+    .btn-primary:hover {
+      background-color: #7a0303;
+      border-color: #7a0303;
+    }
+    
+    .btn-secondary {
+      background-color: #6c757d;
+      border-color: #6c757d;
+      padding: 0.75rem;
+      font-weight: 500;
+      width: 100%;
+    }
+    
+    .btn-secondary:hover {
+      background-color: #5a6268;
+      border-color: #545b62;
+    }
+    
+    .logo {
+      display: block;
+      margin: 0 auto 1.5rem auto;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <div class="login-container">
+  <div class="cadastro-container">
+    <img class="logo" src="{% static 'SARC/img/SARC IFRN.png' %}" alt="Logo" width="auto" height="80" />
+    
     <h2 class="mb-4 text-center">Cadastro</h2>
     
     {% if success %}
       <div class="alert alert-success">Cadastro realizado com sucesso!</div>
       <br>
-      <div><a href="{% url 'index' %}" class="btn btn-primary">Voltar para o Início</a></div>
+      <div class="text-center">
+        <a href="{% url 'login' %}" class="btn btn-primary">Voltar para o Início</a>
+      </div>
+    {% else %}
+      {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+      {% endif %}
+      
+      <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Cadastrar</button>
+      </form>
+      
+      <div class="text-center mt-3">
+        <a href="{% url 'login' %}" class="btn btn-secondary">Voltar</a>
+      </div>
     {% endif %}
-    {% if error %}
-      <div class="alert alert-danger">{{ error }}</div>
-    {% endif %}
-    <form method="post">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit" class="btn btn-primary w-100">Cadastrar</button>
-    </form>
   </div>
 </body>
 </html>

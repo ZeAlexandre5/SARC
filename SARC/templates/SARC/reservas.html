@@ -107,22 +107,32 @@
       <center><h1>Minhas Reservas</h1></center>
     <br>
     {% if reservas %}
-        <table>
-            <div class="table_reservas"></div>
-                <tbody>
-                    {% for reserva in reservas %}
-                      <tr>
-                        <td>{{ reserva.usuario.nome }}</td>
-                        <td>{{ reserva.data }}</td>
-                        <td>{{ reserva.horario }}</td>
-                        <td>{{ reserva.sala }}</td>
-                        <td>{{ reserva.motivo }}</td>
-                      </tr>
-                    {% endfor %}
-            </tbody>
-        </table>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Usuário</th>
+            <th>Data</th>
+            <th>Horário</th>
+            <th>Sala</th>
+            <th>Computador</th>
+            <th>Motivo</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for reserva in reservas %}
+            <tr>
+              <td>{{ reserva.usuario.nome }}</td>
+              <td>{{ reserva.data|date:"d/m/Y" }}</td>
+              <td>{{ reserva.horario|time:"H:i" }}</td>
+              <td>{{ reserva.sala.nome }}</td>
+              <td>{% if reserva.computador %}{{ reserva.computador.numero }}{% else %}-{% endif %}</td>
+              <td>{{ reserva.motivo }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     {% else %}
-        <center><h2>Você não realizou nenhuma reserva.</h2></center>
+      <div class="text-center"><h2>Você não realizou nenhuma reserva.</h2></div>
     {% endif %}
     <br>
     <center><a href="{% url 'salas' %}" class="btn btn-primary">Fazer uma Nova Reserva</a></center>

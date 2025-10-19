@@ -1,4 +1,4 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render,redirect,get_object_or_404
 from datetime import date
 from .models import Reserva,Sala,Computador,Usuario
 from .forms import UsuarioForm,LoginForm
@@ -40,15 +40,20 @@ def index(request):
 def reserva(request):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
+        return redirect('login')  # redireciona para sua página de login
+
+    try:
+        usuario = Usuario.objects.get(id_usuario=usuario_id)
+    except Usuario.DoesNotExist:
+        request.session.pop('usuario_id', None)
         return redirect('login')
-    usuario = Usuario.objects.get(id_usuario=usuario_id)
-    reservas = Reserva.objects.filter(usuario=usuario)
-    today = date.today()
-    reservas = reservas.filter(data=today)
+
+    reservas = Reserva.objects.filter(usuario=usuario).order_by('-data', '-horario')
     context = {
         'reservas': reservas,
+        'usuario': usuario,
     }
-    return render(request,"SARC/reservas.html", context)
+    return render(request, "SARC/reservas.html", context)
 
 def salas(request):
     today = date.today()
@@ -63,7 +68,17 @@ def salas(request):
     return render(request, "SARC/salas.html", context)
 
 
-def reservar_sala(request):
-    return render(request,"SARC/reservar_sala.html")
+def reservar_sala(request, id_sala=None):
+    # se id_sala fornecido, carrega a sala; senão mostra lista ou erro
+    sala = None
+    computadores = None
+    if id_sala is not None:
+        sala = get_object_or_404(Sala, id_sala=id_sala)
+        computadores = Computador.objects.filter(sala=sala)
+    context = {
+        'sala': sala,
+        'computadores': computadores,
+    }
+    return render(request, "SARC/reservar_sala.html", context)
 
 

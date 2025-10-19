@@ -3,12 +3,19 @@ from django import forms
 # Create your models here.
     
 class Usuario(models.Model):
+    
     id_usuario = models.AutoField(primary_key=True)
     nome = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     senha = models.CharField(max_length=100)
     matricula = models.CharField(max_length=20, unique=True, null=True, blank=True)
 
+    TIPO_USUARIO_CHOICES = [
+        ('bolsista', 'Bolsista'),
+        ('aluno', 'Aluno'),
+        ('professor', 'Professor'),
+    ]
+    tipo_usuario = models.CharField(max_length=10, choices=TIPO_USUARIO_CHOICES, default='aluno')
     def __str__(self):
         return f"Usuário {self.id_usuario} - {self.nome} - {self.email} - Matrícula: {self.matricula}"
 

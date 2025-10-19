@@ -5,10 +5,12 @@ from .models import Usuario, Reserva, Sala, Computador
 class UsuarioForm(forms.ModelForm):
     class Meta:
         model = Usuario
-        fields = ['nome', 'matricula', 'email', 'senha']  # ajuste os campos conforme seu model
+        fields = ['nome', 'matricula', 'email', 'senha', 'tipo_usuario']  # ajuste os campos conforme seu model
         widgets = {
             'senha': forms.PasswordInput(),
+            'tipo_usuario': forms.Select(),
         }
+
 
 class LoginForm(forms.Form):
     matricula = forms.CharField(max_length=20)
