@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from datetime import date
 from .models import Reserva, Sala, Computador, Usuario
-from .forms import UsuarioForm, LoginForm
+from .forms import UsuarioForm, LoginForm, ReservaForm
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
@@ -74,15 +74,36 @@ def salas(request):
 
 
 def reservar_sala(request, id_sala=None):
-    # se id_sala fornecido, carrega a sala; senão mostra lista ou erro
     sala = None
-    computadores = None
     if id_sala is not None:
         sala = get_object_or_404(Sala, id_sala=id_sala)
-        computadores = Computador.objects.filter(sala=sala)
+
+    # bloquear acesso se usuário não logado (usa sua sessão)
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+
+    try:
+        usuario = Usuario.objects.get(id_usuario=usuario_id)
+    except Usuario.DoesNotExist:
+        request.session.pop('usuario_id', None)
+        return redirect('login')
+
+    if request.method == 'POST':
+        form = ReservaForm(request.POST, sala=sala)
+        if form.is_valid():
+            reserva = form.save(commit=False)
+            reserva.usuario = usuario
+            reserva.save()
+            return redirect('reservas')
+    else:
+        form = ReservaForm(initial={'sala': sala}, sala=sala)
+
+    computadores = Computador.objects.filter(sala=sala) if sala else Computador.objects.none()
     context = {
         'sala': sala,
         'computadores': computadores,
+        'form': form,
     }
     return render(request, "SARC/reservar_sala.html", context)
 

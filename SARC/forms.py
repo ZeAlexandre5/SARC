@@ -38,11 +38,30 @@ class ComputadorForm(forms.ModelForm):
         fields = ['sala', 'numero', 'estado']
 
 class ReservaForm(forms.ModelForm):
+    TIME_CHOICES = [
+        ('07:00:00', '07:00 - 08:30'),
+        ('08:50:00', '08:50 - 10:20'),
+        ('10:30:00', '10:30 - 12:00'),
+        ('13:00:00', '13:00 - 14:30'),
+        ('14:50:00', '14:50 - 16:20'),
+        ('16:30:00', '16:30 - 18:00'),
+    ]
+
+    horario = forms.TimeField(widget=forms.Select(choices=TIME_CHOICES))
+    computador = forms.ModelChoiceField(queryset=Computador.objects.none(), required=False)
+
     class Meta:
         model = Reserva
-        fields = ['data', 'horario', 'sala', 'motivo']
-
+        fields = ['data', 'horario', 'sala', 'computador', 'motivo']
         widgets = {
             'data': forms.DateInput(attrs={'type': 'date'}),
-            'horario': forms.TimeInput(attrs={'type': 'time'}),
+            'sala': forms.HiddenInput(),  # será preenchido pela view
+            'motivo': forms.Textarea(attrs={'rows':3}),
         }
+
+    def __init__(self, *args, sala=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if sala:
+            self.fields['computador'].queryset = Computador.objects.filter(sala=sala)
+        else:
+            self.fields['computador'].queryset = Computador.objects.all()
