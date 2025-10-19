@@ -1,109 +1,7 @@
 {% extends 'SARC/base.html' %}
-{%load static %}
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>SARC IFRN - Minhas Reservas</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 2em; height: 100vh; width: 100%; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-
-        header {
-          background-color: #940404; /* tom verde escuro, estilo IFRN */
-          padding: 1rem 0;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-          text-align: center;
-          font-family: 'Arial', sans-serif;
-          color: white;
-          }
-        .hero {
-          background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(77, 57, 57, 0.5)),
-                url('https://source.unsplash.com/1600x600/?computer,laboratory') center/cover no-repeat;
-          color: #fff;
-          padding: 100px 0;
-          text-align: center;
-          font-family: 'Times New Roman', serif;}
-          .hero h1 {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
-        }
-
-        /* Logo */
-        #logo {
-            height: 100px; /* ajuste o tamanho como quiser */
-            width: auto;
-            position: relative;
-            top: 10px;
-            margin-right: 20px;
-        }
-
-/* Links da navbar */
-#navbar .nav-link {
-  color: #ffffff;
-  margin-left: 1rem;
-  transition: color 0.3s, border-bottom 0.3s;
-  position: relative;
-  font-weight: 500;
-}
-
-/* Hover nos links */
-#navbar .nav-link:hover {
-  color: #80cbc4; /* verde claro no hover */
-  text-decoration: none;
-}
-
-/* Link ativo */
-#navbar .nav-link.active {
-  color: #b2dfdb;
-  border-bottom: 2px solid #b2dfdb;
-}
-
-/* Botão hamburguer (padrão Bootstrap já é bom) */
-.navbar-toggler {
-  border: none;
-}
-
-/* Ajuste geral para colapso em mobile */
-@media (max-width: 991px) {
-  #navbar .navbar-nav {
-    background-color: #004d40;
-    padding: 1rem;
-    border-radius: 0.5rem;
-  }
-
-  #navbar .nav-link {
-    display: block;
-    margin: 0.5rem 0;
-  }
-}
-
-    .footer {
-      background-color: #940404;
-      padding: 1rem;
-      text-align: center;
-      color: white;
-    }
-
-    body {
-      background-color: #f8f9fa;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      font-family: 'Arial', sans-serif;
-        margin: 30px;
-        padding: 30px;
-    }
-  </style>
-</head>
-<body>
+{% load static %}
+{% block content %}
   <div class="hero">
-    {% block content %}
       <center><h1>Minhas Reservas</h1></center>
     <br>
     {% if reservas %}
@@ -136,10 +34,5 @@
     {% endif %}
     <br>
     <center><a href="{% url 'salas' %}" class="btn btn-primary">Fazer uma Nova Reserva</a></center>
-    {% endblock %}
     </div>
-    <br><br>
-    <footer class="footer">
-      <p>&copy; 2025 SARC IFRN. Todos os direitos reservados.</p>
-</body>
-</html>
+{% endblock %}
