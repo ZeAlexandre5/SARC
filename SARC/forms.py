@@ -5,10 +5,13 @@ from .models import Usuario, Reserva, Sala, Computador
 class UsuarioForm(forms.ModelForm):
     class Meta:
         model = Usuario
-        fields = ['nome', 'matricula', 'email', 'senha', 'tipo_usuario']
+        fields = ['matricula', 'nome', 'email', 'senha', 'tipo_usuario']
         widgets = {
-            'senha': forms.PasswordInput(),
-            'tipo_usuario': forms.Select(),
+            'matricula': forms.TextInput(attrs={'class': 'form-control'}),
+            'nome': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'senha': forms.PasswordInput(attrs={'class': 'form-control'}),  # aqui: input type="password"
+            'tipo_usuario': forms.Select(attrs={'class': 'form-select'}),
         }
 
 class LoginForm(forms.Form):
@@ -48,14 +51,14 @@ class ReservaForm(forms.ModelForm):
     ]
 
     horario = forms.TimeField(widget=forms.Select(choices=TIME_CHOICES))
-    computador = forms.ModelChoiceField(queryset=Computador.objects.none(), required=False)
+    computador = forms.ModelChoiceField(queryset=Computador.objects.none(), required=False, widget=forms.HiddenInput())
 
     class Meta:
         model = Reserva
         fields = ['data', 'horario', 'sala', 'computador', 'motivo']
         widgets = {
             'data': forms.DateInput(attrs={'type': 'date'}),
-            'sala': forms.HiddenInput(),  # será preenchido pela view
+            'sala': forms.HiddenInput(),
             'motivo': forms.Textarea(attrs={'rows':3}),
         }
 
@@ -65,3 +68,20 @@ class ReservaForm(forms.ModelForm):
             self.fields['computador'].queryset = Computador.objects.filter(sala=sala)
         else:
             self.fields['computador'].queryset = Computador.objects.all()
+
+    def clean(self):
+        cleaned = super().clean()
+        sala = cleaned.get('sala')
+        computador = cleaned.get('computador')
+        data = cleaned.get('data')
+        horario = cleaned.get('horario')
+
+        if computador and sala and computador.sala != sala:
+            raise ValidationError("Computador selecionado não pertence à sala.")
+
+        # checar conflito: mesmo sala, data, horário e mesmo computador
+        if computador and data and horario:
+            conflit = Reserva.objects.filter(sala=sala, data=data, horario=horario, computador=computador)
+            if conflit.exists():
+                raise ValidationError("Computador já reservado para esse horário.")
+       
