@@ -14,6 +14,7 @@
             <th>Sala</th>
             <th>Computador</th>
             <th>Motivo</th>
+            <th>Presença</th> <!-- Nova coluna -->
           </tr>
         </thead>
         <tbody>
@@ -25,6 +26,7 @@
               <td>{{ reserva.sala.nome }}</td>
               <td>{% if reserva.computador %}{{ reserva.computador.numero }}{% else %}-{% endif %}</td>
               <td>{{ reserva.motivo }}</td>
+              <td>{{ reserva.get_presenca_display }}</td> <!-- Exibe o valor legível da escolha -->
             </tr>
           {% endfor %}
         </tbody>

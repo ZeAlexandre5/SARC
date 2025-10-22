@@ -45,10 +45,20 @@ class Reserva(models.Model):
     sala = models.ForeignKey(Sala, on_delete=models.CASCADE)
     computador = models.ForeignKey(Computador, on_delete=models.SET_NULL, null=True, blank=True)
     motivo = models.TextField()
-    presenca = models.BooleanField(default=False)
+    # Novo campo para presença
+    PRESENCA_CHOICES = [
+        ('presente', 'Presente'),
+        ('ausente', 'Ausente'),
+        ('pendente', 'Pendente'),
+    ]
+    presenca = models.CharField(
+        max_length=10,
+        choices=PRESENCA_CHOICES,
+        default='pendente'
+    )
 
     def __str__(self):
-        return f"Reserva {self.id_reserva} - {self.data} {self.horario} - {self.sala} - {self.motivo} - {'Presente' if self.presenca else 'Ausente'}"
+        return f"Reserva {self.id_reserva} - {self.data} {self.horario} - {self.sala} - {self.motivo} - {'Presente' if self.presenca == 'presente' else 'Ausente' if self.presenca == 'ausente' else 'Pendente'}"
 
 class UsuarioForm(forms.ModelForm):
     class Meta:
