@@ -17,10 +17,9 @@ Facilitar o agendamento dos laboratórios de informática do IFRN - Campus São 
 - Agendamento de laboratórios
 
 ## 🧍🏻‍♂ Participantes do Projeto
-- José Alexandre
-- Paulo Gabriel
-- Artur Felipe
-## Orientador
-- Ari Oliveira
-## Link do site
-https://paulogabriellf.pythonanywhere.com/
+- [José Alexandre] (https://github.com/ZeAlexandre5)
+- [Paulo Gabriel] (https://github.com/Pauloglf)
+- [Artur Felipe] (https://github.com/arturfew)
+## 🧍🏻‍♂ Orienador do projeto 
+- Ari Oliveira 
+
