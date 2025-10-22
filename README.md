@@ -20,6 +20,7 @@ Facilitar o agendamento dos laboratórios de informática do IFRN - Campus São 
 - José Alexandre
 - Paulo Gabriel
 - Artur Felipe
-
+## Orientador
+- Ari Oliveira
 ## Link do site
 https://paulogabriellf.pythonanywhere.com/
