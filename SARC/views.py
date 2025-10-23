@@ -39,9 +39,11 @@ def login(request):
 # ...existing code...
 
 # Create your views here.
+@login_required
 def index(request):
     return render(request,"SARC/index.html")
 
+@login_required
 def reserva(request):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
@@ -60,6 +62,7 @@ def reserva(request):
     }
     return render(request, "SARC/reservas.html", context)
 
+@login_required
 def salas(request):
     today = date.today()
     reservas = Reserva.objects.filter(data=today)
@@ -72,7 +75,7 @@ def salas(request):
     }
     return render(request, "SARC/salas.html", context)
 
-
+@login_required
 def reservar_sala(request, id_sala=None):
     sala = None
     if id_sala is not None:
@@ -99,7 +102,12 @@ def reservar_sala(request, id_sala=None):
     else:
         form = ReservaForm(initial={'sala': sala}, sala=sala)
 
-    computadores = Computador.objects.filter(sala=sala) if sala else Computador.objects.none()
+    # Obter todos os computadores para a sala específica ou todas as salas
+    if sala:
+        computadores = Computador.objects.filter(sala=sala)
+    else:
+        computadores = Computador.objects.all()
+
     context = {
         'sala': sala,
         'computadores': computadores,
@@ -108,3 +116,45 @@ def reservar_sala(request, id_sala=None):
     return render(request, "SARC/reservar_sala.html", context)
 
 
+@login_required
+def editar_reserva(request, id_reserva):
+    reserva = get_object_or_404(Reserva, id_reserva=id_reserva)
+
+    # bloquear acesso se usuário não logado (usa sua sessão)
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id or reserva.usuario.id_usuario != usuario_id:
+        return redirect('login')
+
+    if request.method == 'POST':
+        form = ReservaForm(request.POST, instance=reserva, sala=reserva.sala)
+        if form.is_valid():
+            form.save()
+            return redirect('reservas')
+    else:
+        form = ReservaForm(instance=reserva, sala=reserva.sala)
+
+    computadores = Computador.objects.filter(sala=reserva.sala)
+    context = {
+        'reserva': reserva,
+        'computadores': computadores,
+        'form': form,
+    }
+    return render(request, "SARC/editar_reserva.html", context)
+
+@login_required
+def cancelar_reserva(request, id_reserva):
+    reserva = get_object_or_404(Reserva, id_reserva=id_reserva)
+
+    # bloquear acesso se usuário não logado (usa sua sessão)
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id or reserva.usuario.id_usuario != usuario_id:
+        return redirect('login')
+
+    if request.method == 'POST':
+        reserva.delete()
+        return redirect('reservas')
+
+    context = {
+        'reserva': reserva,
+    }
+    return render(request, "SARC/cancelar_reserva.html", context)

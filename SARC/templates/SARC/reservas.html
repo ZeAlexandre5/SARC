@@ -14,7 +14,7 @@
             <th>Sala</th>
             <th>Computador</th>
             <th>Motivo</th>
-            <th>Presença</th> <!-- Nova coluna -->
+            <th>Ações</th>
           </tr>
         </thead>
         <tbody>
@@ -26,7 +26,10 @@
               <td>{{ reserva.sala.nome }}</td>
               <td>{% if reserva.computador %}{{ reserva.computador.numero }}{% else %}-{% endif %}</td>
               <td>{{ reserva.motivo }}</td>
-              <td>{{ reserva.get_presenca_display }}</td> <!-- Exibe o valor legível da escolha -->
+              <td>
+                <a href="{% url 'editar_reserva' reserva.id_reserva %}" class="btn btn-warning btn-sm">Editar</a>
+                <a href="{% url 'cancelar_reserva' reserva.id_reserva %}" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja cancelar esta reserva?')">Cancelar</a>
+              </td>
             </tr>
           {% endfor %}
         </tbody>
@@ -36,5 +39,5 @@
     {% endif %}
     <br>
     <center><a href="{% url 'salas' %}" class="btn btn-primary">Fazer uma Nova Reserva</a></center>
-    </div>
+  </div>
 {% endblock %}

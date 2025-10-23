@@ -10,14 +10,6 @@
           <div class="card-body">
             <h5 class="card-title">{{ sala.nome }}</h5>
             <p class="card-text">Capacidade: {{ sala.capacidade }} alunos</p>
-            <h6>Computadores:</h6>
-            <ul>
-              {% for computador in computadores %}
-                {% if computador.sala.id_sala == sala.id_sala %}
-                  <li>Computador {{ computador.numero }}</li>
-                {% endif %}
-              {% endfor %}
-            </ul>
             <a href="{% url 'reservar_sala' sala.id_sala %}" class="btn btn-primary">Selecionar</a>
           </div>
         </div>
