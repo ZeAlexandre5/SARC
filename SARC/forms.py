@@ -50,38 +50,83 @@ class ReservaForm(forms.ModelForm):
         ('16:30:00', '16:30 - 18:00'),
     ]
 
-    horario = forms.TimeField(widget=forms.Select(choices=TIME_CHOICES))
-    computador = forms.ModelChoiceField(queryset=Computador.objects.none(), required=False, widget=forms.HiddenInput())
+    horario = forms.TimeField(
+        widget=forms.Select(choices=TIME_CHOICES),
+        label="Horário"
+    )
+    computador = forms.ModelChoiceField(
+        queryset=Computador.objects.none(), 
+        required=False,  # Computador não é obrigatório
+        widget=forms.HiddenInput(),
+        label="Computador"
+    )
+    
+    # TORNAR SALA NÃO OBRIGATÓRIA NO FORMULÁRIO, POIS JÁ VEM DA URL
+    sala = forms.ModelChoiceField(
+        queryset=Sala.objects.all(),
+        required=False,  # Não é obrigatório no formulário
+        widget=forms.HiddenInput(),
+        label="Sala"
+    )
 
     class Meta:
         model = Reserva
         fields = ['data', 'horario', 'sala', 'computador', 'motivo']
         widgets = {
-            'data': forms.DateInput(attrs={'type': 'date'}),
-            'sala': forms.HiddenInput(),
-            'motivo': forms.Textarea(attrs={'rows':3}),
+            'data': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'motivo': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Digite o motivo da reserva...'}),
+        }
+        labels = {
+            'data': 'Data da Reserva:',
+            'motivo': 'Motivo da Reserva:',
         }
 
     def __init__(self, *args, sala=None, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        # Se uma sala foi passada, define ela como valor inicial
         if sala:
+            self.fields['sala'].initial = sala
             self.fields['computador'].queryset = Computador.objects.filter(sala=sala)
         else:
             self.fields['computador'].queryset = Computador.objects.all()
 
     def clean(self):
-        cleaned = super().clean()
-        sala = cleaned.get('sala')
-        computador = cleaned.get('computador')
-        data = cleaned.get('data')
-        horario = cleaned.get('horario')
+        cleaned_data = super().clean()
+        
+        # Obter a sala do initial se não veio do formulário
+        sala = cleaned_data.get('sala') or self.fields['sala'].initial
+        computador = cleaned_data.get('computador')
+        data = cleaned_data.get('data')
+        horario = cleaned_data.get('horario')
 
-        if computador and sala and computador.sala != sala:
+        # Verificar se a sala foi definida
+        if not sala:
+            raise ValidationError("Sala não especificada.")
+
+        # Verificar se computador pertence à sala
+        if computador and computador.sala != sala:
             raise ValidationError("Computador selecionado não pertence à sala.")
 
-        # checar conflito: mesmo sala, data, horário e mesmo computador
-        if computador and data and horario:
-            conflit = Reserva.objects.filter(sala=sala, data=data, horario=horario, computador=computador)
-            if conflit.exists():
-                raise ValidationError("Computador já reservado para esse horário.")
-       
+        # Verificar conflitos de reserva
+        if data and horario:
+            conflito = Reserva.objects.filter(
+                sala=sala, 
+                data=data, 
+                horario=horario
+            )
+            # Se um computador específico foi selecionado, verificar conflito para ele
+            if computador:
+                conflito = conflito.filter(computador=computador)
+            
+            # Excluir a própria reserva se estiver editando
+            if self.instance and self.instance.pk:
+                conflito = conflito.exclude(pk=self.instance.pk)
+                
+            if conflito.exists():
+                if computador:
+                    raise ValidationError("Computador já reservado para esse horário.")
+                else:
+                    raise ValidationError("Já existe uma reserva para esta sala e horário.")
+        
+        return cleaned_data

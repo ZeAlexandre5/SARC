@@ -6,9 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 # ...existing code...
-def index(request):
-    return render(request, 'index.html')  # ← 4 espaços de indentação
 
 
 def cadastro(request):
@@ -39,7 +38,7 @@ def login(request):
 # ...existing code...
 
 # Create your views here.
-@login_required
+
 def index(request):
     return render(request,"SARC/index.html")
 
@@ -47,7 +46,7 @@ def index(request):
 def reserva(request):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
-        return redirect('login')  # redireciona para sua página de login
+        return redirect('login')
 
     try:
         usuario = Usuario.objects.get(id_usuario=usuario_id)
@@ -56,6 +55,12 @@ def reserva(request):
         return redirect('login')
 
     reservas = Reserva.objects.filter(usuario=usuario).order_by('-data', '-horario')
+    
+    # DEBUG: Mostrar no console
+    print(f"DEBUG - Reservas do usuário {usuario.nome}:")
+    for r in reservas:
+        print(f"  - {r.data} {r.horario} | Sala: {r.sala.nome} | Computador: {r.computador.numero if r.computador else 'Nenhum'}")
+    
     context = {
         'reservas': reservas,
         'usuario': usuario,
@@ -80,41 +85,74 @@ def reservar_sala(request, id_sala=None):
     sala = None
     if id_sala is not None:
         sala = get_object_or_404(Sala, id_sala=id_sala)
+    else:
+        # Se não veio pela URL, tentar pegar da primeira sala disponível
+        salas = Sala.objects.all()
+        if salas.exists():
+            sala = salas.first()
+        else:
+            messages.error(request, 'Nenhuma sala cadastrada no sistema.')
+            return redirect('salas')
 
-    # bloquear acesso se usuário não logado (usa sua sessão)
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
+        messages.error(request, 'Você precisa fazer login para reservar.')
         return redirect('login')
 
     try:
         usuario = Usuario.objects.get(id_usuario=usuario_id)
     except Usuario.DoesNotExist:
         request.session.pop('usuario_id', None)
+        messages.error(request, 'Sessão expirada. Faça login novamente.')
         return redirect('login')
 
     if request.method == 'POST':
+        print("DEBUG - Dados do POST:", request.POST)
+        
         form = ReservaForm(request.POST, sala=sala)
+        
         if form.is_valid():
             reserva = form.save(commit=False)
             reserva.usuario = usuario
-            reserva.save()
-            return redirect('reservas')
+            
+            # Garantir que a sala está definida
+            if not reserva.sala and sala:
+                reserva.sala = sala
+                
+            print(f"DEBUG - Salvando reserva:")
+            print(f"  Usuário: {reserva.usuario.nome}")
+            print(f"  Data: {reserva.data}")
+            print(f"  Horário: {reserva.horario}")
+            print(f"  Sala: {reserva.sala.nome if reserva.sala else 'None'}")
+            print(f"  Computador: {reserva.computador.numero if reserva.computador else 'None'}")
+            print(f"  Motivo: {reserva.motivo}")
+            
+            try:
+                reserva.save()
+                messages.success(request, f'Reserva realizada com sucesso!')
+                return redirect('reservas')
+            except Exception as e:
+                messages.error(request, f'Erro ao salvar reserva: {str(e)}')
+        else:
+            print("DEBUG - Erros do formulário:", form.errors)
+            messages.error(request, 'Erro no formulário. Verifique os dados.')
+            
     else:
         form = ReservaForm(initial={'sala': sala}, sala=sala)
 
-    # Obter todos os computadores para a sala específica ou todas as salas
+    salas = Sala.objects.all().prefetch_related('computador_set')
+    computadores = Computador.objects.all()
+    
     if sala:
-        computadores = Computador.objects.filter(sala=sala)
-    else:
-        computadores = Computador.objects.all()
+        computadores = computadores.filter(sala=sala)
 
     context = {
         'sala': sala,
+        'salas': salas,
         'computadores': computadores,
         'form': form,
     }
     return render(request, "SARC/reservar_sala.html", context)
-
 
 @login_required
 def editar_reserva(request, id_reserva):
