@@ -1,16 +1,176 @@
+
 {% extends 'SARC/base.html' %}
 {% load static %}
 {% block content %}
 
- <!-- Hero Section -->
-  <section class="hero">
-    <div class="container">
-      <h1 class="display-4 fst-italic">Sistema de Agendamento e Reservas de Computadores</h1>
-      <p class="lead">Se estiver precisando reservar um computador do nosso campus para algum trabalho, clique no botão abaixo para ir fazer sua reserva agora <br>
-        <a href="{% url 'reservas' %}" class="btn btn-primary btn-lg mt-3">Reservar Aqui</a></p>
-    </div>
-  </section>
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <!-- Header da Página -->
+      <div class="page-header text-center mb-5">
+        <h1 class="display-5 fw-bold text-dark mb-3">Sistema de Agendamento e Reservas de Computadores</h1>
+        <p class="lead text-dark">Reserve computadores do nosso campus para seus trabalhos e projetos acadêmicos</p>
+      </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+      <!-- Card Principal -->
+      <div class="card shadow-lg border-0 custom-card">
+        <div class="card-body p-5">
+          <!-- Informação de Contexto -->
+          <div class="alert alert-custom border-0 mb-4">
+            <div class="d-flex align-items-center">
+              <i class="fas fa-info-circle me-3 fs-5 text-dark"></i>
+              <div>
+                <h6 class="alert-heading mb-1 text-dark">Como funciona?</h6>
+                <p class="mb-0 text-dark">Selecione o laboratório, computador e horário desejado para fazer sua reserva.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botão de Ação Principal -->
+          <div class="text-center py-4">
+            <a href="{% url 'reservas' %}" class="btn btn-primary btn-lg px-5 py-3">
+              <i class="fas fa-calendar-plus me-2"></i>Fazer Reserva Agora
+            </a>
+          </div>
+
+          <!-- Informações Adicionais -->
+          <div class="row mt-4 pt-3 border-top border-dark">
+            <div class="col-md-4 text-center mb-3">
+              <div class="feature-box p-3">
+                <i class="fas fa-clock fa-2x text-dark mb-3"></i>
+                <h5 class="fw-bold text-dark">Reserva Rápida</h5>
+                <p class="text-dark small">Processo simples em poucos cliques</p>
+              </div>
+            </div>
+            <div class="col-md-4 text-center mb-3">
+              <div class="feature-box p-3">
+                <i class="fas fa-laptop fa-2x text-dark mb-3"></i>
+                <h5 class="fw-bold text-dark">Computadores Disponíveis</h5>
+                <p class="text-dark small">Equipamentos atualizados para uso</p>
+              </div>
+            </div>
+            <div class="col-md-4 text-center mb-3">
+              <div class="feature-box p-3">
+                <i class="fas fa-calendar-check fa-2x text-dark mb-3"></i>
+                <h5 class="fw-bold text-dark">Agenda Flexível</h5>
+                <p class="text-dark small">Horários que se adaptam à sua rotina</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Acesso Rápido -->
+      <div class="row mt-4">
+        <div class="col-md-6">
+          <div class="card h-100 border-0 custom-card shadow-sm">
+            <div class="card-body text-center p-4">
+              <i class="fas fa-list-alt fa-2x text-dark mb-3"></i>
+              <h5 class="fw-bold text-dark">Minhas Reservas</h5>
+              <p class="text-dark small mb-3">Consulte e gerencie suas reservas ativas</p>
+              <a href="{% url 'reservas' %}" class="btn btn-outline-dark btn-sm">Acessar</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card h-100 border-0 custom-card shadow-sm">
+            <div class="card-body text-center p-4">
+              <i class="fas fa-question-circle fa-2x text-dark mb-3"></i>
+              <h5 class="fw-bold text-dark">Ajuda & Suporte</h5>
+              <p class="text-dark small mb-3">Tire suas dúvidas sobre o sistema</p>
+              <button class="btn btn-outline-dark btn-sm">Saiba Mais</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Background principal com a cor especificada */
+body {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.page-header {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 2rem;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.custom-card {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.card {
+    border-radius: 15px;
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.feature-box {
+    transition: all 0.3s ease;
+}
+
+.feature-box:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+    border-radius: 10px;
+    transform: translateY(-2px);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+}
+
+.alert-custom {
+    background-color: rgba(255, 255, 255, 0.25);
+    border-left: 4px solid #0d6efd;
+    border-radius: 8px;
+}
+
+.btn-outline-dark {
+    border: 1px solid #212529;
+    color: #212529;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-dark:hover {
+    background-color: #212529;
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* Melhora a legibilidade do texto */
+.text-dark {
+    color: #212529 !important;
+}
+
+/* Ajusta as bordas para combinar com o tema */
+.border-dark {
+    border-color: rgba(0, 0, 0, 0.2) !important;
+}
+</style>
+
+<!-- Adicione Font Awesome para os ícones -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 {% endblock %}
