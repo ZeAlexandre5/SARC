@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Reserva de Sala (Professor)</h2>
+  <form method="POST">
+    {% csrf_token %}
+    <div class="mb-3">
+      {{ form.data.label_tag }}
+      {{ form.data }}
+    </div>
+    <div class="mb-3">
+      {{ form.horario.label_tag }}
+      {{ form.horario }}
+    </div>
+    <div class="mb-3">
+      {{ form.sala.label_tag }}
+      {{ form.sala }}
+    </div>
+    <div class="mb-3">
+      {{ form.motivo.label_tag }}
+      {{ form.motivo }}
+    </div>
+    <button type="submit" class="btn btn-primary">Reservar</button>
+  </form>
+</div>
+{% endblock %}
+{% if user.tipo_usuario == 'professor' %}
+  <a href="{% url 'reservar_sala_professor' %}" class="btn btn-secondary">
+    Reservar Sala (Professor)
+  </a>
+{% endif %}
+
