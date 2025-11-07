@@ -196,3 +196,34 @@ def cancelar_reserva(request, id_reserva):
         'reserva': reserva,
     }
     return render(request, "SARC/cancelar_reserva.html", context)
+
+@login_required
+def reservar_sala_professor(request):
+    """
+    View que permite ao professor reservar uma sala sem computador.
+    """
+    # Tenta identificar o usuário logado como Professor
+    try:
+        usuario = Usuario.objects.get(matricula=request.user.matricula)
+    except Exception:
+        usuario = None
+
+    if request.method == 'POST':
+        form = ProfessorReservaForm(request.POST)
+        if form.is_valid():
+            reserva = form.save(commit=False)
+            if usuario:
+                reserva.usuario = usuario  # associa ao professor logado
+            else:
+                reserva.usuario = request.user  # fallback
+
+            reserva.save()
+            messages.success(request, "Sala reservada com sucesso!")
+            return redirect('minhas_reservas')  # ajuste o nome da URL
+        else:
+            messages.error(request, "Corrija os erros no formulário.")
+    else:
+        form = ProfessorReservaForm()
+
+    return render(request, 'reservar_sala_professor.html', {'form': form})
+

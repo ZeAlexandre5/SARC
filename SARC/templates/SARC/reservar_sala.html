@@ -490,3 +490,8 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 {% endblock %}
+{% if user.tipo_usuario == 'professor' %}
+  <a href="{% url 'reservar_sala_professor' %}" class="btn btn-secondary">
+    Reservar Sala (Professor)
+  </a>
+{% endif %}
