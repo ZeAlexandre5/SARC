@@ -124,11 +124,22 @@
                                 {{ form.horario.errors }}
                             </div>
 
+                            <!-- Se for professor, não mostrar motivo/computador (computador já é hidden) -->
+                            {% if tipo_usuario != 'professor' %}
                             <div class="mb-3">
                                 <label class="form-label fw-bold">{{ form.motivo.label }}</label>
                                 {{ form.motivo }}
                                 {{ form.motivo.errors }}
                             </div>
+                            {% endif %}
+
+                            <!-- Bolsista: opção de bloquear a sala -->
+                            {% if tipo_usuario == 'bolsista' %}
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="bloquear" id="id_bloquear">
+                                <label class="form-check-label text-white" for="id_bloquear">Bloquear sala (reservar sem computador)</label>
+                            </div>
+                            {% endif %}
 
                             <button type="submit" class="btn btn-primary w-100 py-2 btn-hover" id="submitBtn" disabled>
                                 <i class="fas fa-calendar-check me-2"></i>Confirmar Reserva
@@ -368,27 +379,44 @@
 
 <script>
     let selectedComputer = null;
-
-    // Inicializa a página
+    const TIPO_USUARIO = "{{ tipo_usuario|default:'' }}";
     document.addEventListener('DOMContentLoaded', function() {
-        // Aplicar estilos aos campos do formulário
         const inputs = document.querySelectorAll('input, select, textarea');
-        inputs.forEach(input => {
-            input.classList.add('form-control');
-        });
+        inputs.forEach(input => input.classList.add('form-control'));
 
-        // Atualiza disponibilidade quando horário ou data mudam
-        document.getElementById('id_horario').addEventListener('change', updateReservationSummary);
-        document.getElementById('id_data').addEventListener('change', updateReservationSummary);
+        const dataField = document.getElementById('id_data');
+        const horarioField = document.getElementById('id_horario');
+
+        function maybeEnableSubmit() {
+            const data = dataField ? dataField.value : '';
+            const horario = horarioField ? horarioField.value : '';
+            const submitBtn = document.getElementById('submitBtn');
+            if (!submitBtn) return;
+            if (TIPO_USUARIO === 'professor' || TIPO_USUARIO === 'bolsista') {
+                // professores/bolsistas não precisam selecionar computador obrigatoriamente
+                submitBtn.disabled = !(data && horario);
+            } else {
+                submitBtn.disabled = !(data && horario && selectedComputer);
+            }
+        }
+
+        if (horarioField) horarioField.addEventListener('change', function(){ updateReservationSummary(); maybeEnableSubmit(); });
+        if (dataField) dataField.addEventListener('change', function(){ updateReservationSummary(); maybeEnableSubmit(); });
+
+        // primeira verificação
+        maybeEnableSubmit();
     });
 
-    // Seleciona um computador
     function selectComputer(computerElement) {
+        // Professores não selecionam computador
+        if (TIPO_USUARIO === 'professor') {
+            alert('Professores não precisam selecionar um computador. Preencha data/horário e confirme a reserva.');
+            return;
+        }
         // Só permite selecionar computadores disponíveis
         if (!computerElement.classList.contains('disponível')) {
             return;
         }
-
         // Remove seleção anterior
         document.querySelectorAll('.seat.selected').forEach(seat => {
             seat.classList.remove('selected');
@@ -407,17 +435,18 @@
             room: computerElement.dataset.roomName
         };
 
-        // Preenche o campo computador no formulário
         const computadorField = document.getElementById('id_computador');
         if (computadorField) {
             computadorField.value = selectedComputer.id;
         }
 
-        // Atualiza o resumo da reserva
         updateReservationSummary();
 
-        // Habilita o botão de submit
-        document.getElementById('submitBtn').disabled = false;
+        // Habilita / verificar botão submit
+        const data = document.getElementById('id_data').value;
+        const horario = document.getElementById('id_horario').value;
+        const submitBtn = document.getElementById('submitBtn');
+        if (submitBtn) submitBtn.disabled = !(data && horario && selectedComputer);
     }
 
     // Atualiza o resumo da reserva

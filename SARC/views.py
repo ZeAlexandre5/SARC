@@ -28,9 +28,11 @@ def login(request):
             usuario = form.user
             request.session['usuario_id'] = usuario.id_usuario
             request.session['usuario_nome'] = usuario.nome
+            # redireciona conforme tipo
+            if getattr(usuario, 'tipo_usuario', '') == 'bolsista':
+                return redirect('dashboard_bolsista')
             return redirect('reservas')
         else:
-            # erros do form aparecem automaticamente; opcionalmente repassar mensagem genérica
             erro = None
     else:
         form = LoginForm()
@@ -54,7 +56,11 @@ def reserva(request):
         request.session.pop('usuario_id', None)
         return redirect('login')
 
-    reservas = Reserva.objects.filter(usuario=usuario).order_by('-data', '-horario')
+    # bolsista vê todas as reservas, outros só as próprias
+    if usuario.tipo_usuario == 'bolsista':
+        reservas = Reserva.objects.all().order_by('-data', '-horario')
+    else:
+        reservas = Reserva.objects.filter(usuario=usuario).order_by('-data', '-horario')
     
     # DEBUG: Mostrar no console
     print(f"DEBUG - Reservas do usuário {usuario.nome}:")
@@ -64,6 +70,7 @@ def reserva(request):
     context = {
         'reservas': reservas,
         'usuario': usuario,
+        'tipo_usuario': usuario.tipo_usuario,  # usado pelos templates
     }
     return render(request, "SARC/reservas.html", context)
 
@@ -86,7 +93,6 @@ def reservar_sala(request, id_sala=None):
     if id_sala is not None:
         sala = get_object_or_404(Sala, id_sala=id_sala)
     else:
-        # Se não veio pela URL, tentar pegar da primeira sala disponível
         salas = Sala.objects.all()
         if salas.exists():
             sala = salas.first()
@@ -106,19 +112,41 @@ def reservar_sala(request, id_sala=None):
         messages.error(request, 'Sessão expirada. Faça login novamente.')
         return redirect('login')
 
+    tipo_usuario = usuario.tipo_usuario
+
     if request.method == 'POST':
         print("DEBUG - Dados do POST:", request.POST)
-        
-        form = ReservaForm(request.POST, sala=sala)
-        
+        data = request.POST.copy()  # mutável
+
+        # Professores não escolhem computador nem precisam preencher motivo:
+        if tipo_usuario == 'professor':
+            # garantir motivo mínimo para o form
+            if not data.get('motivo'):
+                data['motivo'] = 'Reserva de sala (Professor)'
+            # garantir computador vazio
+            data['computador'] = ''
+
+        # Bolsista pode bloquear sala: checkbox name="bloquear"
+        if tipo_usuario == 'bolsista' and data.get('bloquear') == 'on':
+            # marca como bloqueio caso não haja motivo
+            if not data.get('motivo'):
+                data['motivo'] = 'Bloqueio de sala (Bolsista)'
+            data['computador'] = ''  # bloqueio sem computador
+
+        form = ReservaForm(data, sala=sala)
+
         if form.is_valid():
             reserva = form.save(commit=False)
             reserva.usuario = usuario
-            
-            # Garantir que a sala está definida
+
+            # assegurar sala se vier pela URL
             if not reserva.sala and sala:
                 reserva.sala = sala
-                
+
+            # forçar comportamento: professores/bolsistas sem computador
+            if tipo_usuario in ['professor', 'bolsista']:
+                reserva.computador = None
+
             print(f"DEBUG - Salvando reserva:")
             print(f"  Usuário: {reserva.usuario.nome}")
             print(f"  Data: {reserva.data}")
@@ -126,7 +154,7 @@ def reservar_sala(request, id_sala=None):
             print(f"  Sala: {reserva.sala.nome if reserva.sala else 'None'}")
             print(f"  Computador: {reserva.computador.numero if reserva.computador else 'None'}")
             print(f"  Motivo: {reserva.motivo}")
-            
+
             try:
                 reserva.save()
                 messages.success(request, f'Reserva realizada com sucesso!')
@@ -136,13 +164,11 @@ def reservar_sala(request, id_sala=None):
         else:
             print("DEBUG - Erros do formulário:", form.errors)
             messages.error(request, 'Erro no formulário. Verifique os dados.')
-            
     else:
         form = ReservaForm(initial={'sala': sala}, sala=sala)
 
     salas = Sala.objects.all().prefetch_related('computador_set')
     computadores = Computador.objects.all()
-    
     if sala:
         computadores = computadores.filter(sala=sala)
 
@@ -151,6 +177,7 @@ def reservar_sala(request, id_sala=None):
         'salas': salas,
         'computadores': computadores,
         'form': form,
+        'tipo_usuario': tipo_usuario,  # necessário no template
     }
     return render(request, "SARC/reservar_sala.html", context)
 
@@ -198,32 +225,56 @@ def cancelar_reserva(request, id_reserva):
     return render(request, "SARC/cancelar_reserva.html", context)
 
 @login_required
-def reservar_sala_professor(request):
-    """
-    View que permite ao professor reservar uma sala sem computador.
-    """
-    # Tenta identificar o usuário logado como Professor
+def dashboard_bolsista(request):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+    
     try:
-        usuario = Usuario.objects.get(matricula=request.user.matricula)
-    except Exception:
-        usuario = None
-
-    if request.method == 'POST':
-        form = ProfessorReservaForm(request.POST)
-        if form.is_valid():
-            reserva = form.save(commit=False)
-            if usuario:
-                reserva.usuario = usuario  # associa ao professor logado
-            else:
-                reserva.usuario = request.user  # fallback
-
-            reserva.save()
-            messages.success(request, "Sala reservada com sucesso!")
-            return redirect('minhas_reservas')  # ajuste o nome da URL
+        usuario = Usuario.objects.get(id_usuario=usuario_id)
+        # Verificar se é bolsista
+        if usuario.tipo_usuario != 'bolsista':
+            return redirect('reservas')
+    except Usuario.DoesNotExist:
+        request.session.pop('usuario_id', None)
+        return redirect('login')
+    
+    # Estatísticas
+    total_reservas = Reserva.objects.count()
+    hoje = date.today()
+    reservas_hoje = Reserva.objects.filter(data=hoje).count()
+    
+    # Calcular salas ocupadas hoje
+    salas_ocupadas_ids = Reserva.objects.filter(data=hoje).values_list('sala', flat=True).distinct()
+    salas_ocupadas = len(salas_ocupadas_ids)
+    
+    # Para simplificar, vamos considerar que salas bloqueadas são aquelas com reserva de bolsista
+    salas_bloqueadas = Reserva.objects.filter(
+        data=hoje, 
+        usuario__tipo_usuario='bolsista',
+        motivo__icontains='bloqueio'
+    ).count()
+    
+    # Reservas recentes (últimas 10)
+    reservas = Reserva.objects.all().order_by('-data', '-horario')[:10]
+    
+    # Status das salas (simplificado)
+    salas = Sala.objects.all()
+    for sala in salas:
+        reserva_hoje = Reserva.objects.filter(sala=sala, data=hoje).exists()
+        if reserva_hoje:
+            sala.status = 'ocupada'
         else:
-            messages.error(request, "Corrija os erros no formulário.")
-    else:
-        form = ProfessorReservaForm()
-
-    return render(request, 'reservar_sala_professor.html', {'form': form})
-
+            sala.status = 'disponivel'
+    
+    context = {
+        'total_reservas': total_reservas,
+        'reservas_hoje': reservas_hoje,
+        'salas_ocupadas': salas_ocupadas,
+        'salas_bloqueadas': salas_bloqueadas,
+        'reservas': reservas,
+        'salas': salas,
+        'hoje': hoje,
+    }
+    
+    return render(request, "SARC/dashboard_bolsista.html", context)
