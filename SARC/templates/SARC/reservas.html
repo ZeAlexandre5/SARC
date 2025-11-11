@@ -73,6 +73,18 @@
                                         <a href="{% url 'cancelar_reserva' reserva.id_reserva %}" class="btn btn-outline-danger">
                                             <i class="fas fa-trash"></i>
                                         </a>
+
+                                        {# Botão marcar presença - visível se estiver pendente e usuário autorizado #}
+                                        {% if reserva.presenca == 'pendente' %}
+                                            {% if usuario.tipo_usuario == 'bolsista' or reserva.usuario.id_usuario == usuario.id_usuario %}
+                                                <form method="post" action="{% url 'marcar_presenca' reserva.id_reserva %}" style="display:inline;">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-success" title="Marcar presença">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>

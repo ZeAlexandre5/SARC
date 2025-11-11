@@ -1,14 +1,26 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from datetime import date
+from datetime import date, datetime, timedelta
+from django.utils import timezone
 from .models import Reserva, Sala, Computador, Usuario
 from .forms import UsuarioForm, LoginForm, ReservaForm
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-# ...existing code...
 
+# helper: atualiza automaticamente reservas pendentes para 'ausente' após 24h do horário agendado
+def _auto_mark_absent():
+    now = timezone.now()
+    cutoff = now - timedelta(hours=24)
+    pendentes = Reserva.objects.filter(presenca='pendente')
+    for r in pendentes:
+        try:
+            scheduled = datetime.combine(r.data, r.horario)
+            if timezone.is_naive(scheduled):
+                scheduled = timezone.make_aware(scheduled, timezone.get_current_timezone())
+        except Exception:
+            continue
+        if scheduled < cutoff:
+            r.presenca = 'ausente'
+            r.save(update_fields=['presenca'])
 
 def cadastro(request):
     if request.method == 'POST':
@@ -37,7 +49,6 @@ def login(request):
     else:
         form = LoginForm()
     return render(request, "SARC/Login.html", {'form': form, 'erro': erro})
-# ...existing code...
 
 # Create your views here.
 
@@ -46,6 +57,9 @@ def index(request):
 
 @login_required
 def reserva(request):
+    # atualiza ausências antes de listar
+    _auto_mark_absent()
+
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
         return redirect('login')
@@ -61,16 +75,10 @@ def reserva(request):
         reservas = Reserva.objects.all().order_by('-data', '-horario')
     else:
         reservas = Reserva.objects.filter(usuario=usuario).order_by('-data', '-horario')
-    
-    # DEBUG: Mostrar no console
-    print(f"DEBUG - Reservas do usuário {usuario.nome}:")
-    for r in reservas:
-        print(f"  - {r.data} {r.horario} | Sala: {r.sala.nome} | Computador: {r.computador.numero if r.computador else 'Nenhum'}")
-    
+
     context = {
         'reservas': reservas,
         'usuario': usuario,
-        'tipo_usuario': usuario.tipo_usuario,  # usado pelos templates
     }
     return render(request, "SARC/reservas.html", context)
 
@@ -278,3 +286,46 @@ def dashboard_bolsista(request):
     }
     
     return render(request, "SARC/dashboard_bolsista.html", context)
+
+@login_required
+def marcar_presenca(request, id_reserva):
+    if request.method != 'POST':
+        return redirect('reservas')
+
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        messages.error(request, 'Faça login para registrar presença.')
+        return redirect('login')
+
+    usuario = get_object_or_404(Usuario, id_usuario=usuario_id)
+    reserva = get_object_or_404(Reserva, id_reserva=id_reserva)
+
+    # autorização: bolsista pode marcar qualquer; usuário normal só marcar suas reservas
+    if usuario.tipo_usuario != 'bolsista' and reserva.usuario.id_usuario != usuario.id_usuario:
+        messages.error(request, 'Você não tem permissão para marcar presença desta reserva.')
+        return redirect('reservas')
+
+    # auto-update ausências (por segurança)
+    _auto_mark_absent()
+
+    if reserva.presenca == 'presente':
+        messages.info(request, 'Presença já registrada.')
+        return redirect('reservas')
+
+    # impedir marcar presença se já expirou (mais de 24h)
+    try:
+        scheduled = datetime.combine(reserva.data, reserva.horario)
+        if timezone.is_naive(scheduled):
+            scheduled = timezone.make_aware(scheduled, timezone.get_current_timezone())
+    except Exception:
+        scheduled = None
+
+    now = timezone.now()
+    if scheduled and scheduled + timedelta(hours=24) < now:
+        messages.error(request, 'Prazo para registrar presença expirado; status ficou como falta.')
+        return redirect('reservas')
+
+    reserva.presenca = 'presente'
+    reserva.save(update_fields=['presenca'])
+    messages.success(request, 'Presença registrada com sucesso.')
+    return redirect('reservas')
