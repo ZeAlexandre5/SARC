@@ -67,18 +67,42 @@
                             <div class="lab-room">
                                 <h3 class="text-white">🏠 {{ sala.nome }} - <span class="text-white-50">{{ sala.computador_set.count }} computadores</span></h3>
                                 <div class="computers-grid">
+                                    {# renderiza linhas horizontais de até 6 PCs; dentro da linha grupos visuais de 3 PCs #}
                                     {% for computador in sala.computador_set.all %}
-                                    <div class="seat {{ computador.estado|lower }}"
-                                         data-computer-id="{{ computador.id_computador }}"
-                                         data-room-id="{{ sala.id_sala }}"
-                                         data-room-name="{{ sala.nome }}"
-                                         data-computer-number="{{ computador.numero }}"
-                                         onclick="selectComputer(this)">
-                                        <span class="computer-number">{{ computador.numero }}</span>
-                                        <span class="tooltip">{{ computador.estado }} - PC {{ computador.numero }} - {{ sala.nome }}</span>
-                                    </div>
+                                        {# abre nova linha a cada 6 itens (0,6,12,...) #}
+                                        {% if forloop.first or forloop.counter0|divisibleby:6 %}
+                                            <div class="computer-row-horizontal">
+                                        {% endif %}
+
+                                        {# abre grupo visual a cada 3 itens dentro da linha (0,3,6...) #}
+                                        {% if forloop.counter0|divisibleby:3 %}
+                                            <div class="computer-group-inline">
+                                        {% endif %}
+
+                                        <div class="computer-seat-wrapper">
+                                            <div class="seat {{ computador.estado|lower }}"
+                                                 data-computer-id="{{ computador.id_computador }}"
+                                                 data-room-id="{{ sala.id_sala }}"
+                                                 data-room-name="{{ sala.nome }}"
+                                                 data-computer-number="{{ computador.numero }}"
+                                                 onclick="selectComputer(this)">
+                                                <span class="computer-number">{{ computador.numero }}</span>
+                                                <span class="tooltip">{{ computador.estado }} - PC {{ computador.numero }} - {{ sala.nome }}</span>
+                                            </div>
+                                        </div>
+
+                                        {# fecha grupo após 3 itens ou no último item #}
+                                        {% if forloop.counter|divisibleby:3 or forloop.last %}
+                                            </div> {# .computer-group-inline #}
+                                        {% endif %}
+
+                                        {# fecha linha após 6 itens ou no último item #}
+                                        {% if forloop.counter|divisibleby:6 or forloop.last %}
+                                            </div> {# .computer-row-horizontal #}
+                                        {% endif %}
                                     {% endfor %}
                                 </div>
+
                             </div>
                             {% empty %}
                             <div class="alert alert-warning bg-dark bg-opacity-25 border-light">
@@ -183,10 +207,34 @@
     }
 
     .computers-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+        display: flex;
+        gap: 40px; /* espaço horizontal entre colunas */
+        margin-top: 30px;
+        flex-wrap: wrap;
+    }
+
+    .computer-row-horizontal {
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+        align-items: flex-start;
+        margin-bottom: 18px; /* espaço entre linhas de 6 */
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+    }
+
+    .computer-group-inline {
+        display: flex;
         gap: 12px;
-        margin-top: 20px;
+        padding-right: 18px;
+        border-right: 1px dashed rgba(255,255,255,0.06); /* separador entre grupos de 3 dentro da linha */
+        margin-right: 18px;
+    }
+
+    .computer-seat-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     /* Estilos dos "Assentos" - Computadores */
