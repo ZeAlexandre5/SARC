@@ -1,5 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from .models import Usuario, Reserva, Sala, Computador
 
 # ==========================
@@ -115,6 +116,12 @@ class ReservaForm(forms.ModelForm):
         data = cleaned_data.get('data')
         horario = cleaned_data.get('horario')
 
+        # Impedir reserva para data passada
+        if data:
+            hoje = timezone.localdate()
+            if data < hoje:
+                raise ValidationError("Não é possível reservar para dias no passado.")
+
         if not sala:
             raise ValidationError("Sala não especificada.")
 
@@ -176,6 +183,12 @@ class ProfessorReservaForm(forms.ModelForm):
         data = cleaned_data.get('data')
         horario = cleaned_data.get('horario')
 
+        # Impedir reserva para data passada
+        if data:
+            hoje = timezone.localdate()
+            if data < hoje:
+                raise ValidationError("Não é possível reservar para dias no passado.")
+
         if data and horario and sala:
             conflito = Reserva.objects.filter(
                 sala=sala,
@@ -189,5 +202,4 @@ class ProfessorReservaForm(forms.ModelForm):
         return cleaned_data
 
 
-    
-    
+
