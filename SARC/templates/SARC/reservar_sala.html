@@ -511,6 +511,92 @@
         const date = new Date(dateString);
         return date.toLocaleDateString('pt-BR');
     }
+
+    const CHECK_URL = "{% url 'check_availability' %}";
+    const SALA_ID = "{{ sala.id_sala|default:'' }}";
+
+    async function fetchAvailability() {
+        const dataField = document.getElementById('id_data');
+        const horarioField = document.getElementById('id_horario');
+        if (!dataField || !horarioField) return;
+
+        const date = dataField.value;
+        const horario = horarioField.value;
+        if (!date || !horario) {
+            markAllAvailable(); // limpa marcações se falta info
+            return;
+        }
+
+        const params = new URLSearchParams({
+            sala_id: SALA_ID,
+            date: date,
+            horario: horario
+        });
+
+        try {
+            const resp = await fetch(CHECK_URL + '?' + params.toString(), { method: 'GET' });
+            if (!resp.ok) throw new Error('Network response not ok');
+            const data = await resp.json();
+            applyAvailability(data);
+        } catch (err) {
+            console.error('Erro ao checar disponibilidade:', err);
+        }
+    }
+
+    function applyAvailability(data) {
+        const seats = document.querySelectorAll('.computers-grid .seat');
+        const reserved = (data && data.reserved) ? data.reserved.map(String) : [];
+        const reservedAll = data && data.reserved_all;
+
+        seats.forEach(seat => {
+            const id = seat.dataset.computerId;
+            // remover classes de estado dinâmico
+            seat.classList.remove('reservado');
+            // se selecionado não sobrescrever a seleção visual, mas impedir seleção se reservado
+            if (reservedAll) {
+                seat.classList.add('reservado');
+                seat.classList.remove('disponível', 'selected');
+            } else if (reserved.includes(String(id))) {
+                seat.classList.add('reservado');
+                seat.classList.remove('disponível', 'selected');
+            } else {
+                // somente marcar disponível se não for ocupado por estado estático
+                if (!seat.classList.contains('ocupado')) {
+                    seat.classList.remove('reservado', 'selected');
+                    seat.classList.add('disponível');
+                }
+            }
+        });
+
+        // se sala bloqueada inteira, limpar seleção atual
+        if (reservedAll) {
+            selectedComputer = null;
+            const compField = document.getElementById('id_computador');
+            if (compField) compField.value = '';
+            updateReservationSummary();
+        }
+    }
+
+    function markAllAvailable() {
+        const seats = document.querySelectorAll('.computers-grid .seat');
+        seats.forEach(seat => {
+            if (!seat.classList.contains('ocupado')) {
+                seat.classList.remove('reservado', 'selected');
+                seat.classList.add('disponível');
+            }
+        });
+    }
+
+    // conectar às mudanças de data/horário
+    document.addEventListener('DOMContentLoaded', function() {
+        const dataField = document.getElementById('id_data');
+        const horarioField = document.getElementById('id_horario');
+        if (dataField) dataField.addEventListener('change', fetchAvailability);
+        if (horarioField) horarioField.addEventListener('change', fetchAvailability);
+
+        // chamar uma vez no carregamento (se já houver valores)
+        fetchAvailability();
+    });
 </script>
 
 <!-- Adicionando Font Awesome para ícones -->

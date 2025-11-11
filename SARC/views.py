@@ -5,6 +5,7 @@ from .models import Reserva, Sala, Computador, Usuario
 from .forms import UsuarioForm, LoginForm, ReservaForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.http import JsonResponse
 
 # helper: atualiza automaticamente reservas pendentes para 'ausente' após 24h do horário agendado
 def _auto_mark_absent():
@@ -329,3 +330,33 @@ def marcar_presenca(request, id_reserva):
     reserva.save(update_fields=['presenca'])
     messages.success(request, 'Presença registrada com sucesso.')
     return redirect('reservas')
+
+def check_availability(request):
+    """
+    GET params: sala_id (int), date (YYYY-MM-DD), horario (HH:MM:SS or HH:MM)
+    Retorna JSON: { "reserved_all": bool, "reserved": [id_computador,...] }
+    """
+    sala_id = request.GET.get('sala_id')
+    date_str = request.GET.get('date')
+    horario = request.GET.get('horario')
+
+    if not sala_id or not date_str or not horario:
+        return JsonResponse({'error': 'missing parameters'}, status=400)
+
+    try:
+        # data no formato ISO 'YYYY-MM-DD'
+        from datetime import datetime
+        data = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except Exception:
+        return JsonResponse({'error': 'invalid date'}, status=400)
+
+    # normalizar horario para HH:MM:SS se necessário
+    if len(horario) == 5:
+        horario = horario + ':00'
+
+    # buscar reservas nessa sala/data/horario
+    reservas = Reserva.objects.filter(sala_id=sala_id, data=data, horario=horario)
+    reserved_all = reservas.filter(computador__isnull=True).exists()
+    reserved_ids = list(reservas.exclude(computador__isnull=True).values_list('computador_id', flat=True))
+
+    return JsonResponse({'reserved_all': reserved_all, 'reserved': reserved_ids})

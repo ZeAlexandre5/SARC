@@ -10,6 +10,7 @@ urlpatterns = [
     path("login/", views.login, name="login"),
     path("editar_reserva/<int:id_reserva>/", views.editar_reserva, name="editar_reserva"),
     path("cancelar_reserva/<int:id_reserva>/", views.cancelar_reserva, name="cancelar_reserva"),
-    path("marcar_presenca/<int:id_reserva>/", views.marcar_presenca, name="marcar_presenca"),  # nova rota
+    path("marcar_presenca/<int:id_reserva>/", views.marcar_presenca, name="marcar_presenca"),
     path("dashboard/", views.dashboard_bolsista, name="dashboard_bolsista"),
+    path("api/check_availability/", views.check_availability, name="check_availability"),
 ]
