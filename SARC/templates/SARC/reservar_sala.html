@@ -591,16 +591,33 @@
         }
     }
 
-    function applyAvailability(data) {
+    async function applyAvailability(data) {
         const seats = document.querySelectorAll('.computers-grid .seat');
         const reserved = (data && data.reserved) ? data.reserved.map(String) : [];
         const reservedAll = data && data.reserved_all;
 
+        // mostrar banner de sala bloqueada
+        let banner = document.getElementById('salaBloqueadaBanner');
+        if (!banner) {
+          const body = document.querySelector('.card-body.text-white');
+          if (body) {
+            banner = document.createElement('div');
+            banner.id = 'salaBloqueadaBanner';
+            banner.className = 'alert alert-warning mt-3';
+            banner.style.display = 'none';
+            banner.innerText = 'Esta sala está bloqueada para o horário selecionado.';
+            body.prepend(banner);
+          }
+        }
+        if (reservedAll) {
+          banner && (banner.style.display = 'block');
+        } else {
+          banner && (banner.style.display = 'none');
+        }
+
         seats.forEach(seat => {
             const id = seat.dataset.computerId;
-            // remover classes de estado dinâmico
             seat.classList.remove('reservado');
-            // se selecionado não sobrescrever a seleção visual, mas impedir seleção se reservado
             if (reservedAll) {
                 seat.classList.add('reservado');
                 seat.classList.remove('disponível', 'selected');
@@ -608,7 +625,6 @@
                 seat.classList.add('reservado');
                 seat.classList.remove('disponível', 'selected');
             } else {
-                // somente marcar disponível se não for ocupado por estado estático
                 if (!seat.classList.contains('ocupado')) {
                     seat.classList.remove('reservado', 'selected');
                     seat.classList.add('disponível');
@@ -616,7 +632,6 @@
             }
         });
 
-        // se sala bloqueada inteira, limpar seleção atual
         if (reservedAll) {
             selectedComputer = null;
             const compField = document.getElementById('id_computador');

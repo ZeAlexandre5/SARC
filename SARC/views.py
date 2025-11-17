@@ -1,11 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta, date
 from django.utils import timezone
 from .models import Reserva, Sala, Computador, Usuario
-from .forms import UsuarioForm, LoginForm, ReservaForm
+from .forms import UsuarioForm, LoginForm, ReservaForm, ProfessorReservaForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest
+from django.views.decorators.http import require_POST
+import json
 
 # helper: atualiza automaticamente reservas pendentes para 'ausente' após 24h do horário agendado
 def _auto_mark_absent():
@@ -360,3 +362,146 @@ def check_availability(request):
     reserved_ids = list(reservas.exclude(computador__isnull=True).values_list('computador_id', flat=True))
 
     return JsonResponse({'reserved_all': reserved_all, 'reserved': reserved_ids})
+
+@require_POST
+@login_required
+def bloquear_sala(request):
+    """Bloquear sala — usado pelo bolsista. Recebe sala_id, date, horario, motivo via POST (AJAX)."""
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return JsonResponse({'error': 'login_required'}, status=401)
+    usuario = get_object_or_404(Usuario, id_usuario=usuario_id)
+    if usuario.tipo_usuario != 'bolsista':
+        return JsonResponse({'error': 'forbidden'}, status=403)
+
+    sala_id = request.POST.get('sala_id') or request.POST.get('sala')
+    date_str = request.POST.get('data') or request.POST.get('date')
+    horario = request.POST.get('horario')
+    motivo = request.POST.get('motivo') or 'Bloqueio de sala (Bolsista)'
+
+    if not sala_id or not date_str or not horario:
+        return JsonResponse({'error': 'missing_parameters'}, status=400)
+
+    try:
+        d = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except Exception:
+        return JsonResponse({'error': 'invalid_date'}, status=400)
+
+    if len(horario) == 5:
+        horario = horario + ':00'
+
+    # não duplicar bloqueio
+    conflito = Reserva.objects.filter(sala_id=sala_id, data=d, horario=horario)
+    if conflito.filter(computador__isnull=True).exists():
+        return JsonResponse({'error': 'already_blocked'}, status=409)
+
+    # criar reserva sem computador indicando bloqueio
+    reserva = Reserva(
+        usuario=usuario,
+        data=d,
+        horario=horario,
+        sala_id=sala_id,
+        computador=None,
+        motivo=motivo
+    )
+    reserva.save()
+    return JsonResponse({'success': True, 'id_reserva': reserva.id_reserva})
+
+
+@require_POST
+@login_required
+def desbloquear_sala(request):
+    """Desbloquear sala — remove reserva de bloqueio (bolsista) para sala/data/horário."""
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return JsonResponse({'error': 'login_required'}, status=401)
+    usuario = get_object_or_404(Usuario, id_usuario=usuario_id)
+    if usuario.tipo_usuario != 'bolsista':
+        return JsonResponse({'error': 'forbidden'}, status=403)
+
+    sala_id = request.POST.get('sala_id')
+    date_str = request.POST.get('data')
+    horario = request.POST.get('horario')
+
+    if not sala_id or not date_str or not horario:
+        return JsonResponse({'error': 'missing_parameters'}, status=400)
+
+    try:
+        d = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except Exception:
+        return JsonResponse({'error': 'invalid_date'}, status=400)
+
+    if len(horario) == 5:
+        horario = horario + ':00'
+
+    bloqueios = Reserva.objects.filter(
+        sala_id=sala_id, data=d, horario=horario, computador__isnull=True,
+        usuario__tipo_usuario='bolsista'
+    )
+    if not bloqueios.exists():
+        return JsonResponse({'error': 'no_block_found'}, status=404)
+
+    count = bloqueios.count()
+    bloqueios.delete()
+    return JsonResponse({'success': True, 'deleted': count})
+
+
+@require_POST
+@login_required
+def editar_reserva_ajax(request):
+    """Editar reserva via AJAX — bolsista pode editar qualquer; usuário pode editar a sua."""
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return JsonResponse({'error': 'login_required'}, status=401)
+    usuario = get_object_or_404(Usuario, id_usuario=usuario_id)
+
+    try:
+        payload = request.POST
+        reserva_id = payload.get('id') or payload.get('id_reserva')
+        reserva = Reserva.objects.get(id_reserva=reserva_id)
+    except Exception:
+        return JsonResponse({'error': 'invalid_reserva'}, status=400)
+
+    # permissão
+    if usuario.tipo_usuario != 'bolsista' and reserva.usuario.id_usuario != usuario.id_usuario:
+        return JsonResponse({'error': 'forbidden'}, status=403)
+
+    # aplicar alterações permitidas
+    data_str = payload.get('data')
+    horario = payload.get('horario')
+    motivo = payload.get('motivo')
+
+    if data_str:
+        try:
+            reserva.data = datetime.strptime(data_str, '%Y-%m-%d').date()
+        except Exception:
+            return JsonResponse({'error': 'invalid_date'}, status=400)
+    if horario:
+        reserva.horario = horario if len(horario) == 8 else horario + ':00'
+    if motivo is not None:
+        reserva.motivo = motivo
+
+    reserva.save()
+    return JsonResponse({'success': True, 'id_reserva': reserva.id_reserva})
+
+
+@require_POST
+@login_required
+def cancelar_reserva_ajax(request):
+    """Cancelar reserva via AJAX."""
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return JsonResponse({'error': 'login_required'}, status=401)
+    usuario = get_object_or_404(Usuario, id_usuario=usuario_id)
+
+    reserva_id = request.POST.get('id') or request.POST.get('id_reserva')
+    try:
+        reserva = Reserva.objects.get(id_reserva=reserva_id)
+    except Reserva.DoesNotExist:
+        return JsonResponse({'error': 'not_found'}, status=404)
+
+    if usuario.tipo_usuario != 'bolsista' and reserva.usuario.id_usuario != usuario.id_usuario:
+        return JsonResponse({'error': 'forbidden'}, status=403)
+
+    reserva.delete()
+    return JsonResponse({'success': True})
