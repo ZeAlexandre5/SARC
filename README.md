@@ -21,5 +21,5 @@ Facilitar o agendamento dos laboratórios de informática do IFRN - Campus São 
 - Paulo Gabriel (https://github.com/Pauloglf)
 - Artur Felipe (https://github.com/arturfew)
 ## 🧍🏻‍♂ Orienador do projeto 
-- Ari Oliveira 
+- Ari Oliveira (https://github.com/Aribarreto)
 
