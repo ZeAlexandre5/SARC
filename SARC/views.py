@@ -41,7 +41,7 @@ def login(request):
         form = LoginForm(request.POST)
         if form.is_valid():
             usuario = form.user
-            request.session['usuario_id'] = usuario.id_usuario
+            request.session['usuario_id'] = usuario.pk
             request.session['usuario_nome'] = usuario.nome
             # redireciona conforme tipo
             if getattr(usuario, 'tipo_usuario', '') == 'bolsista':
@@ -68,7 +68,7 @@ def reserva(request):
         return redirect('login')
 
     try:
-        usuario = Usuario.objects.get(id_usuario=usuario_id)
+        usuario = Usuario.objects.get(pk=usuario_id)
     except Usuario.DoesNotExist:
         request.session.pop('usuario_id', None)
         return redirect('login')
@@ -115,9 +115,8 @@ def reservar_sala(request, id_sala=None):
     if not usuario_id:
         messages.error(request, 'Você precisa fazer login para reservar.')
         return redirect('login')
-
     try:
-        usuario = Usuario.objects.get(id_usuario=usuario_id)
+        usuario = Usuario.objects.get(pk=usuario_id)
     except Usuario.DoesNotExist:
         request.session.pop('usuario_id', None)
         messages.error(request, 'Sessão expirada. Faça login novamente.')
@@ -198,7 +197,7 @@ def editar_reserva(request, id_reserva):
 
     # bloquear acesso se usuário não logado (usa sua sessão)
     usuario_id = request.session.get('usuario_id')
-    if not usuario_id or reserva.usuario.id_usuario != usuario_id:
+    if not usuario_id or reserva.usuario.pk != usuario_id:
         return redirect('login')
 
     if request.method == 'POST':
@@ -223,7 +222,7 @@ def cancelar_reserva(request, id_reserva):
 
     # bloquear acesso se usuário não logado (usa sua sessão)
     usuario_id = request.session.get('usuario_id')
-    if not usuario_id or reserva.usuario.id_usuario != usuario_id:
+    if not usuario_id or reserva.usuario.pk != usuario_id:
         return redirect('login')
 
     if request.method == 'POST':
@@ -242,7 +241,7 @@ def dashboard_bolsista(request):
         return redirect('login')
     
     try:
-        usuario = Usuario.objects.get(id_usuario=usuario_id)
+        usuario = Usuario.objects.get(pk=usuario_id)
         # Verificar se é bolsista
         if usuario.tipo_usuario != 'bolsista':
             return redirect('reservas')
@@ -300,12 +299,12 @@ def marcar_presenca(request, id_reserva):
         messages.error(request, 'Faça login para registrar presença.')
         return redirect('login')
 
-    usuario = get_object_or_404(Usuario, id_usuario=usuario_id)
+    usuario = get_object_or_404(Usuario, pk=usuario_id)
     reserva = get_object_or_404(Reserva, id_reserva=id_reserva)
 
     # autorização: bolsista pode marcar qualquer; usuário normal só marcar suas reservas
-    if usuario.tipo_usuario != 'bolsista' and reserva.usuario.id_usuario != usuario.id_usuario:
-        messages.error(request, 'Você não tem permissão para marcar presença desta reserva.')
+    if usuario.tipo_usuario != 'bolsista' and reserva.usuario.pk != usuario.pk:
+        messages.error(request, 'Você não tem permissão para marcar presença nesta reserva.')
         return redirect('reservas')
 
     # auto-update ausências (por segurança)
@@ -370,7 +369,7 @@ def bloquear_sala(request):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
         return JsonResponse({'error': 'login_required'}, status=401)
-    usuario = get_object_or_404(Usuario, id_usuario=usuario_id)
+    usuario = get_object_or_404(Usuario, pk=usuario_id)
     if usuario.tipo_usuario != 'bolsista':
         return JsonResponse({'error': 'forbidden'}, status=403)
 
@@ -415,7 +414,7 @@ def desbloquear_sala(request):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
         return JsonResponse({'error': 'login_required'}, status=401)
-    usuario = get_object_or_404(Usuario, id_usuario=usuario_id)
+    usuario = get_object_or_404(Usuario, pk=usuario_id)
     if usuario.tipo_usuario != 'bolsista':
         return JsonResponse({'error': 'forbidden'}, status=403)
 
@@ -453,7 +452,7 @@ def editar_reserva_ajax(request):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
         return JsonResponse({'error': 'login_required'}, status=401)
-    usuario = get_object_or_404(Usuario, id_usuario=usuario_id)
+    usuario = get_object_or_404(Usuario, pk=usuario_id)
 
     try:
         payload = request.POST
@@ -463,7 +462,7 @@ def editar_reserva_ajax(request):
         return JsonResponse({'error': 'invalid_reserva'}, status=400)
 
     # permissão
-    if usuario.tipo_usuario != 'bolsista' and reserva.usuario.id_usuario != usuario.id_usuario:
+    if usuario.tipo_usuario != 'bolsista' and reserva.usuario.pk != usuario.pk:
         return JsonResponse({'error': 'forbidden'}, status=403)
 
     # aplicar alterações permitidas
@@ -492,7 +491,7 @@ def cancelar_reserva_ajax(request):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
         return JsonResponse({'error': 'login_required'}, status=401)
-    usuario = get_object_or_404(Usuario, id_usuario=usuario_id)
+    usuario = get_object_or_404(Usuario, pk=usuario_id)
 
     reserva_id = request.POST.get('id') or request.POST.get('id_reserva')
     try:
@@ -500,7 +499,7 @@ def cancelar_reserva_ajax(request):
     except Reserva.DoesNotExist:
         return JsonResponse({'error': 'not_found'}, status=404)
 
-    if usuario.tipo_usuario != 'bolsista' and reserva.usuario.id_usuario != usuario.id_usuario:
+    if usuario.tipo_usuario != 'bolsista' and reserva.usuario.pk != usuario.pk:
         return JsonResponse({'error': 'forbidden'}, status=403)
 
     reserva.delete()

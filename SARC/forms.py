@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from .models import Usuario, Reserva, Sala, Computador
@@ -7,35 +8,38 @@ from .models import Usuario, Reserva, Sala, Computador
 # FORMULÁRIO DE USUÁRIO
 # ==========================
 class UsuarioForm(forms.ModelForm):
+    password = forms.CharField(label='Senha', widget=forms.PasswordInput(attrs={'class':'form-control'}), required=True)
+
     class Meta:
         model = Usuario
-        fields = ['matricula', 'nome', 'email', 'senha', 'tipo_usuario']
-        widgets = {
-            'matricula': forms.TextInput(attrs={'class': 'form-control'}),
-            'nome': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'senha': forms.PasswordInput(attrs={'class': 'form-control'}),
-            'tipo_usuario': forms.Select(attrs={'class': 'form-select'}),
-        }
+        fields = ['matricula', 'nome', 'email', 'password', 'tipo_usuario']
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        pwd = self.cleaned_data.get('password')
+        if pwd:
+            user.set_password(pwd)
+        if commit:
+            user.save()
+        return user
 
 
 # ==========================
 # FORMULÁRIO DE LOGIN
 # ==========================
 class LoginForm(forms.Form):
-    matricula = forms.CharField(max_length=20)
-    senha = forms.CharField(widget=forms.PasswordInput())
+    matricula = forms.CharField(max_length=20, widget=forms.TextInput(attrs={'class':'form-control'}))
+    senha = forms.CharField(widget=forms.PasswordInput(attrs={'class':'form-control'}))
 
     def clean(self):
         cleaned = super().clean()
         matricula = cleaned.get('matricula')
         senha = cleaned.get('senha')
         if matricula and senha:
-            try:
-                usuario = Usuario.objects.get(matricula=matricula, senha=senha)
-                self.user = usuario
-            except Usuario.DoesNotExist:
+            user = authenticate(username=matricula, password=senha)
+            if user is None:
                 raise forms.ValidationError("Matrícula ou senha inválidos.")
+            self.user = user
         return cleaned
 
 

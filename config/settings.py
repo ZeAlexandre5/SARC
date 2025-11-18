@@ -37,8 +37,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'SARC'
+    'SARC',
+    'Bolsistas',
 ]
+
+# usar o novo model de usuário
+AUTH_USER_MODEL = 'SARC.Usuario'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
