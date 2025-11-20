@@ -610,10 +610,7 @@ def criar_computador(request):
 
     return JsonResponse({'success': True, 'computador': {'id': getattr(computador, 'id_computador', getattr(computador, 'pk', None)), 'nome': getattr(computador, 'numero', nome)}})
 
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect, get_object_or_404
-from .forms import ComputadorCreateForm
-from .models import Sala, Computador
+
 
 @login_required
 def editar_sala(request, sala_id):
@@ -621,44 +618,47 @@ def editar_sala(request, sala_id):
     if getattr(request.user, 'tipo_usuario', '') != 'bolsista':
         return redirect('salas')
 
-    # localizar sala por pk ou id_sala
-    sala = None
-    try:
-        sala = Sala.objects.get(pk=sala_id)
-    except Exception:
-        try:
-            sala = Sala.objects.get(id_sala=sala_id)
-        except Exception:
-            return redirect('salas')
+    # localizar sala corretamente
+    sala = Sala.objects.filter(pk=sala_id).first()
+    if not sala:
+        sala = Sala.objects.filter(id_sala=sala_id).first()
+    if not sala:
+        return redirect('salas')
 
+    erro = None
+
+    # Ação de adicionar computador
     if request.method == 'POST':
         form = ComputadorCreateForm(request.POST)
-        if form.is_valid():
-            nome = form.cleaned_data['nome']
-            comp_fields = {f.name for f in Computador._meta.get_fields() if hasattr(f, 'name')}
-            create_kwargs = {}
-            if 'numero' in comp_fields:
-                create_kwargs['numero'] = nome
-            elif 'nome' in comp_fields:
-                create_kwargs['nome'] = nome
-            elif 'hostname' in comp_fields:
-                create_kwargs['hostname'] = nome
 
-            if 'sala' in comp_fields:
-                create_kwargs['sala'] = sala
-            elif 'sala_id' in comp_fields:
-                create_kwargs['sala_id'] = getattr(sala, 'pk', None)
+        if form.is_valid():
+            # ← AQUI (1)
+            numero = form.cleaned_data['numero']
 
             try:
-                computador = Computador.objects.create(**create_kwargs)
-                if 'sala' not in create_kwargs and hasattr(computador, 'sala'):
-                    computador.sala = sala
-                    computador.save()
+                # ← AQUI (2) CRIA O COMPUTADOR
+                Computador.objects.create(
+                    sala=sala,
+                    numero=numero,
+                    estado="Disponível"
+                )
+
+                return redirect('editar_sala', sala_id=sala_id)
+
             except Exception as e:
-                return render(request, 'SARC/editar_sala.html', {'sala': sala, 'form': form, 'erro': str(e), 'computadores': sala.computador_set.all()})
-            return redirect('editar_sala', sala_id=sala_id)
+                erro = str(e)
+
+        else:
+            erro = "Dados inválidos."
+
     else:
         form = ComputadorCreateForm()
 
-    computadores = sala.computador_set.all() if hasattr(sala, 'computador_set') else []
-    return render(request, 'SARC/editar_sala.html', {'sala': sala, 'form': form, 'computadores': computadores})
+    computadores = Computador.objects.filter(sala=sala)
+
+    return render(request, 'SARC/editar_sala.html', {
+        'sala': sala,
+        'form': form,
+        'erro': erro,
+        'computadores': computadores
+    })

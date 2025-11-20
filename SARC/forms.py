@@ -219,14 +219,24 @@ class ProfessorReservaForm(forms.ModelForm):
 # ==========================
 # FORMULÁRIOS DE CRIAÇÃO (SALA E COMPUTADOR)
 # ==========================
-class SalaCreateForm(forms.Form):
-    nome = forms.CharField(max_length=200, required=True, widget=forms.TextInput(attrs={'class':'form-control'}))
-    capacidade = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'class':'form-control'}))
-    descricao = forms.CharField(required=False, widget=forms.Textarea(attrs={'class':'form-control','rows':3}))
+class SalaCreateForm(forms.ModelForm):
+    class Meta:
+        model = Sala
+        fields = ['nome', 'capacidade']
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control'}),
+            'capacidade': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
 
-class ComputadorCreateForm(forms.Form):
-    nome = forms.CharField(max_length=200, required=True, widget=forms.TextInput(attrs={'class':'form-control'}))
-    sala_id = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={'class':'form-control'}))
+
+class ComputadorCreateForm(forms.ModelForm):
+    class Meta:
+        model = Computador
+        fields = ['numero', 'estado']
+        widgets = {
+            'numero': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: PC-01'}),
+            'estado': forms.Select(attrs={'class': 'form-select'}),
+        }
 
 
 
