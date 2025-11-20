@@ -229,14 +229,13 @@ class SalaCreateForm(forms.ModelForm):
         }
 
 
-class ComputadorCreateForm(forms.ModelForm):
-    class Meta:
-        model = Computador
-        fields = ['numero', 'estado']
-        widgets = {
-            'numero': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: PC-01'}),
-            'estado': forms.Select(attrs={'class': 'form-select'}),
-        }
+class ComputadorCreateForm(forms.Form):
+    numero = forms.CharField(
+        max_length=10,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+
 
 
 

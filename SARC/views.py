@@ -571,44 +571,33 @@ def criar_computador(request):
     if not form.is_valid():
         return JsonResponse({'error': 'invalid_data', 'errors': form.errors}, status=400)
 
-    nome = form.cleaned_data['nome']
-    sala_id = form.cleaned_data['sala_id']
+    numero = form.cleaned_data['numero']
+    sala_id = request.POST.get("sala_id")  # vindo via AJAX ou fetch na requisição
 
-    # localizar sala por pk ou por campo id_sala
-    sala = None
-    try:
-        sala = Sala.objects.get(pk=sala_id)
-    except Exception:
-        try:
-            sala = Sala.objects.get(id_sala=sala_id)
-        except Exception:
-            return JsonResponse({'error': 'sala_not_found'}, status=404)
+    # localizar sala
+    sala = Sala.objects.filter(pk=sala_id).first()
+    if not sala:
+        sala = Sala.objects.filter(id_sala=sala_id).first()
+    if not sala:
+        return JsonResponse({'error': 'sala_not_found'}, status=404)
 
     try:
-        comp_fields = {f.name for f in Computador._meta.get_fields() if hasattr(f, 'name')}
-        create_kwargs = {}
-        # mapear para o campo real do modelo (prefere 'numero')
-        if 'numero' in comp_fields:
-            create_kwargs['numero'] = nome
-        elif 'nome' in comp_fields:
-            create_kwargs['nome'] = nome
-        elif 'hostname' in comp_fields:
-            create_kwargs['hostname'] = nome
-
-        if 'sala' in comp_fields:
-            create_kwargs['sala'] = sala
-        elif 'sala_id' in comp_fields:
-            create_kwargs['sala_id'] = getattr(sala, 'pk', None)
-
-        computador = Computador.objects.create(**create_kwargs)
-
-        if 'sala' not in create_kwargs and hasattr(computador, 'sala'):
-            computador.sala = sala
-            computador.save()
+        computador = Computador.objects.create(
+            sala=sala,
+            numero=numero,
+            estado="Disponível"
+        )
     except Exception as e:
         return JsonResponse({'error': 'db_error', 'detail': str(e)}, status=500)
 
-    return JsonResponse({'success': True, 'computador': {'id': getattr(computador, 'id_computador', getattr(computador, 'pk', None)), 'nome': getattr(computador, 'numero', nome)}})
+    return JsonResponse({
+        'success': True,
+        'computador': {
+            'id': computador.id_computador,
+            'numero': computador.numero
+        }
+    })
+
 
 
 
