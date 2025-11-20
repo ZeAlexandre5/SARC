@@ -28,18 +28,28 @@ class UsuarioForm(forms.ModelForm):
 # FORMULÁRIO DE LOGIN
 # ==========================
 class LoginForm(forms.Form):
-    matricula = forms.CharField(max_length=20, widget=forms.TextInput(attrs={'class':'form-control'}))
-    senha = forms.CharField(widget=forms.PasswordInput(attrs={'class':'form-control'}))
+    matricula = forms.CharField(
+        max_length=20,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    senha = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control'})
+    )
 
     def clean(self):
         cleaned = super().clean()
         matricula = cleaned.get('matricula')
         senha = cleaned.get('senha')
+
         if matricula and senha:
-            user = authenticate(username=matricula, password=senha)
+            # IMPORTANTE → mudar username para matricula
+            user = authenticate(matricula=matricula, password=senha)
+
             if user is None:
                 raise forms.ValidationError("Matrícula ou senha inválidos.")
+
             self.user = user
+
         return cleaned
 
 

@@ -8,6 +8,8 @@ from django.contrib import messages
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_POST
 import json
+from django.contrib.auth import login as auth_login
+
 
 # helper: atualiza automaticamente reservas pendentes para 'ausente' após 24h do horário agendado
 def _auto_mark_absent():
@@ -35,22 +37,27 @@ def cadastro(request):
         form = UsuarioForm()
     return render(request, "SARC/cadastro.html", {'form': form})
 
+
 def login(request):
     erro = None
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
             usuario = form.user
-            request.session['usuario_id'] = usuario.pk
-            request.session['usuario_nome'] = usuario.nome
+
+            # LOGIN REAL DO DJANGO
+            auth_login(request, usuario)
+
             # redireciona conforme tipo
-            if getattr(usuario, 'tipo_usuario', '') == 'bolsista':
+            if usuario.tipo_usuario == 'bolsista':
                 return redirect('dashboard_bolsista')
+
             return redirect('reservas')
         else:
-            erro = None
+            erro = "Matrícula ou senha inválidos."
     else:
         form = LoginForm()
+
     return render(request, "SARC/Login.html", {'form': form, 'erro': erro})
 
 # Create your views here.
@@ -63,14 +70,13 @@ def reserva(request):
     # atualiza ausências antes de listar
     _auto_mark_absent()
 
-    usuario_id = request.session.get('usuario_id')
-    if not usuario_id:
+    usuario = request.user
+    if not request.user.is_authenticated:
         return redirect('login')
 
     try:
-        usuario = Usuario.objects.get(pk=usuario_id)
+       usuario = request.user
     except Usuario.DoesNotExist:
-        request.session.pop('usuario_id', None)
         return redirect('login')
 
     # bolsista vê todas as reservas, outros só as próprias
@@ -111,14 +117,13 @@ def reservar_sala(request, id_sala=None):
             messages.error(request, 'Nenhuma sala cadastrada no sistema.')
             return redirect('salas')
 
-    usuario_id = request.session.get('usuario_id')
-    if not usuario_id:
+    usuario = request.user
+    if not request.user.is_authenticated:
         messages.error(request, 'Você precisa fazer login para reservar.')
         return redirect('login')
     try:
-        usuario = Usuario.objects.get(pk=usuario_id)
+        usuario = request.user
     except Usuario.DoesNotExist:
-        request.session.pop('usuario_id', None)
         messages.error(request, 'Sessão expirada. Faça login novamente.')
         return redirect('login')
 
@@ -196,8 +201,8 @@ def editar_reserva(request, id_reserva):
     reserva = get_object_or_404(Reserva, id_reserva=id_reserva)
 
     # bloquear acesso se usuário não logado (usa sua sessão)
-    usuario_id = request.session.get('usuario_id')
-    if not usuario_id or reserva.usuario.pk != usuario_id:
+    usuario = request.user
+    if not request.user.is_authenticated or reserva.usuario != request.user:
         return redirect('login')
 
     if request.method == 'POST':
@@ -221,8 +226,8 @@ def cancelar_reserva(request, id_reserva):
     reserva = get_object_or_404(Reserva, id_reserva=id_reserva)
 
     # bloquear acesso se usuário não logado (usa sua sessão)
-    usuario_id = request.session.get('usuario_id')
-    if not usuario_id or reserva.usuario.pk != usuario_id:
+    usuario = request.user
+    if not usuario.is_authenticated or reserva.usuario != usuario:
         return redirect('login')
 
     if request.method == 'POST':
@@ -236,17 +241,16 @@ def cancelar_reserva(request, id_reserva):
 
 @login_required
 def dashboard_bolsista(request):
-    usuario_id = request.session.get('usuario_id')
-    if not usuario_id:
+    usuario = request.user
+    if not request.user.is_authenticated:
         return redirect('login')
     
     try:
-        usuario = Usuario.objects.get(pk=usuario_id)
+        usuario = request.user
         # Verificar se é bolsista
         if usuario.tipo_usuario != 'bolsista':
             return redirect('reservas')
     except Usuario.DoesNotExist:
-        request.session.pop('usuario_id', None)
         return redirect('login')
     
     # Estatísticas
@@ -294,16 +298,17 @@ def marcar_presenca(request, id_reserva):
     if request.method != 'POST':
         return redirect('reservas')
 
-    usuario_id = request.session.get('usuario_id')
-    if not usuario_id:
+    usuario = request.user
+    if not request.user.is_authenticated:
         messages.error(request, 'Faça login para registrar presença.')
         return redirect('login')
 
-    usuario = get_object_or_404(Usuario, pk=usuario_id)
+    usuario = request.user
     reserva = get_object_or_404(Reserva, id_reserva=id_reserva)
 
     # autorização: bolsista pode marcar qualquer; usuário normal só marcar suas reservas
-    if usuario.tipo_usuario != 'bolsista' and reserva.usuario.pk != usuario.pk:
+    if usuario.tipo_usuario != 'bolsista' and reserva.usuario != usuario:
+
         messages.error(request, 'Você não tem permissão para marcar presença nesta reserva.')
         return redirect('reservas')
 
@@ -366,10 +371,10 @@ def check_availability(request):
 @login_required
 def bloquear_sala(request):
     """Bloquear sala — usado pelo bolsista. Recebe sala_id, date, horario, motivo via POST (AJAX)."""
-    usuario_id = request.session.get('usuario_id')
-    if not usuario_id:
+    usuario = request.user
+    if not request.user.is_authenticated:
         return JsonResponse({'error': 'login_required'}, status=401)
-    usuario = get_object_or_404(Usuario, pk=usuario_id)
+    usuario = request.user
     if usuario.tipo_usuario != 'bolsista':
         return JsonResponse({'error': 'forbidden'}, status=403)
 
@@ -411,10 +416,10 @@ def bloquear_sala(request):
 @login_required
 def desbloquear_sala(request):
     """Desbloquear sala — remove reserva de bloqueio (bolsista) para sala/data/horário."""
-    usuario_id = request.session.get('usuario_id')
-    if not usuario_id:
+    usuario = request.user
+    if not request.user.is_authenticated:
         return JsonResponse({'error': 'login_required'}, status=401)
-    usuario = get_object_or_404(Usuario, pk=usuario_id)
+    usuario = request.user
     if usuario.tipo_usuario != 'bolsista':
         return JsonResponse({'error': 'forbidden'}, status=403)
 
@@ -449,10 +454,10 @@ def desbloquear_sala(request):
 @login_required
 def editar_reserva_ajax(request):
     """Editar reserva via AJAX — bolsista pode editar qualquer; usuário pode editar a sua."""
-    usuario_id = request.session.get('usuario_id')
-    if not usuario_id:
+    usuario = request.user
+    if not request.user.is_authenticated:
         return JsonResponse({'error': 'login_required'}, status=401)
-    usuario = get_object_or_404(Usuario, pk=usuario_id)
+    usuario = request.user
 
     try:
         payload = request.POST
@@ -462,7 +467,7 @@ def editar_reserva_ajax(request):
         return JsonResponse({'error': 'invalid_reserva'}, status=400)
 
     # permissão
-    if usuario.tipo_usuario != 'bolsista' and reserva.usuario.pk != usuario.pk:
+    if usuario.tipo_usuario != 'bolsista' and reserva.usuario != usuario:
         return JsonResponse({'error': 'forbidden'}, status=403)
 
     # aplicar alterações permitidas
@@ -488,10 +493,11 @@ def editar_reserva_ajax(request):
 @login_required
 def cancelar_reserva_ajax(request):
     """Cancelar reserva via AJAX."""
-    usuario_id = request.session.get('usuario_id')
-    if not usuario_id:
+    usuario = request.user
+    if not request.user.is_authenticated:
         return JsonResponse({'error': 'login_required'}, status=401)
-    usuario = get_object_or_404(Usuario, pk=usuario_id)
+    usuario = request.user
+
 
     reserva_id = request.POST.get('id') or request.POST.get('id_reserva')
     try:
@@ -499,7 +505,7 @@ def cancelar_reserva_ajax(request):
     except Reserva.DoesNotExist:
         return JsonResponse({'error': 'not_found'}, status=404)
 
-    if usuario.tipo_usuario != 'bolsista' and reserva.usuario.pk != usuario.pk:
+    if usuario.tipo_usuario != 'bolsista' and reserva.usuario != usuario:
         return JsonResponse({'error': 'forbidden'}, status=403)
 
     reserva.delete()
