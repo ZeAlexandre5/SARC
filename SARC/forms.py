@@ -216,4 +216,17 @@ class ProfessorReservaForm(forms.ModelForm):
         return cleaned_data
 
 
+# ==========================
+# FORMULÁRIOS DE CRIAÇÃO (SALA E COMPUTADOR)
+# ==========================
+class SalaCreateForm(forms.Form):
+    nome = forms.CharField(max_length=200, required=True, widget=forms.TextInput(attrs={'class':'form-control'}))
+    capacidade = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'class':'form-control'}))
+    descricao = forms.CharField(required=False, widget=forms.Textarea(attrs={'class':'form-control','rows':3}))
+
+class ComputadorCreateForm(forms.Form):
+    nome = forms.CharField(max_length=200, required=True, widget=forms.TextInput(attrs={'class':'form-control'}))
+    sala_id = forms.IntegerField(required=True, widget=forms.NumberInput(attrs={'class':'form-control'}))
+
+
 

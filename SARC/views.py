@@ -2,13 +2,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from datetime import datetime, timedelta, date
 from django.utils import timezone
 from .models import Reserva, Sala, Computador, Usuario
-from .forms import UsuarioForm, LoginForm, ReservaForm, ProfessorReservaForm
+from .forms import UsuarioForm, LoginForm, ReservaForm, ProfessorReservaForm, SalaCreateForm, ComputadorCreateForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_POST
-import json
 from django.contrib.auth import login as auth_login
+from django.db import models
 
 
 # helper: atualiza automaticamente reservas pendentes para 'ausente' após 24h do horário agendado
@@ -510,3 +510,155 @@ def cancelar_reserva_ajax(request):
 
     reserva.delete()
     return JsonResponse({'success': True})
+
+@require_POST
+@login_required
+def criar_sala(request):
+    # somente bolsistas podem criar salas
+    if getattr(request.user, 'tipo_usuario', '') != 'bolsista':
+        return JsonResponse({'error': 'forbidden'}, status=403)
+
+    form = SalaCreateForm(request.POST)
+    if not form.is_valid():
+        return JsonResponse({'error': 'invalid_data', 'errors': form.errors}, status=400)
+
+    data = form.cleaned_data
+    nome = data.get('nome')
+    capacidade = data.get('capacidade')
+    descricao = data.get('descricao')
+
+    # montar kwargs de criação incluindo campos obrigatórios do modelo
+    create_kwargs = {}
+    # nome
+    # tenta nome exato do modelo ('nome' ou outro)
+    if 'nome' in {f.name for f in Sala._meta.get_fields() if hasattr(f, 'name')}:
+        create_kwargs['nome'] = nome
+    else:
+        # fallback: usa primeiro campo de texto se houver (não ideal, mas evita crash)
+        pass
+
+    # capacidade (respeitar se campo existe e se permite null)
+    if 'capacidade' in {f.name for f in Sala._meta.get_fields() if hasattr(f, 'name')}:
+        field = Sala._meta.get_field('capacidade')
+        if capacidade is not None and capacidade != '':
+            create_kwargs['capacidade'] = capacidade
+        else:
+            # se o campo não permite NULL, forneça fallback 0
+            if not getattr(field, 'null', False):
+                create_kwargs['capacidade'] = 0
+            else:
+                create_kwargs['capacidade'] = None
+
+    # descricao (opcional)
+    if 'descricao' in {f.name for f in Sala._meta.get_fields() if hasattr(f, 'name')} and descricao:
+        create_kwargs['descricao'] = descricao
+
+    try:
+        sala = Sala.objects.create(**create_kwargs)
+    except Exception as e:
+        return JsonResponse({'error': 'db_error', 'detail': str(e)}, status=500)
+
+    return JsonResponse({'success': True, 'sala': {'id': getattr(sala, 'id', getattr(sala, 'id_sala', None)), 'nome': getattr(sala, 'nome', nome)}})
+
+
+@require_POST
+@login_required
+def criar_computador(request):
+    if getattr(request.user, 'tipo_usuario', '') != 'bolsista':
+        return JsonResponse({'error': 'forbidden'}, status=403)
+
+    form = ComputadorCreateForm(request.POST)
+    if not form.is_valid():
+        return JsonResponse({'error': 'invalid_data', 'errors': form.errors}, status=400)
+
+    nome = form.cleaned_data['nome']
+    sala_id = form.cleaned_data['sala_id']
+
+    # localizar sala por pk ou por campo id_sala
+    sala = None
+    try:
+        sala = Sala.objects.get(pk=sala_id)
+    except Exception:
+        try:
+            sala = Sala.objects.get(id_sala=sala_id)
+        except Exception:
+            return JsonResponse({'error': 'sala_not_found'}, status=404)
+
+    try:
+        comp_fields = {f.name for f in Computador._meta.get_fields() if hasattr(f, 'name')}
+        create_kwargs = {}
+        # mapear para o campo real do modelo (prefere 'numero')
+        if 'numero' in comp_fields:
+            create_kwargs['numero'] = nome
+        elif 'nome' in comp_fields:
+            create_kwargs['nome'] = nome
+        elif 'hostname' in comp_fields:
+            create_kwargs['hostname'] = nome
+
+        if 'sala' in comp_fields:
+            create_kwargs['sala'] = sala
+        elif 'sala_id' in comp_fields:
+            create_kwargs['sala_id'] = getattr(sala, 'pk', None)
+
+        computador = Computador.objects.create(**create_kwargs)
+
+        if 'sala' not in create_kwargs and hasattr(computador, 'sala'):
+            computador.sala = sala
+            computador.save()
+    except Exception as e:
+        return JsonResponse({'error': 'db_error', 'detail': str(e)}, status=500)
+
+    return JsonResponse({'success': True, 'computador': {'id': getattr(computador, 'id_computador', getattr(computador, 'pk', None)), 'nome': getattr(computador, 'numero', nome)}})
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
+from .forms import ComputadorCreateForm
+from .models import Sala, Computador
+
+@login_required
+def editar_sala(request, sala_id):
+    # só bolsista pode editar/criar computadores
+    if getattr(request.user, 'tipo_usuario', '') != 'bolsista':
+        return redirect('salas')
+
+    # localizar sala por pk ou id_sala
+    sala = None
+    try:
+        sala = Sala.objects.get(pk=sala_id)
+    except Exception:
+        try:
+            sala = Sala.objects.get(id_sala=sala_id)
+        except Exception:
+            return redirect('salas')
+
+    if request.method == 'POST':
+        form = ComputadorCreateForm(request.POST)
+        if form.is_valid():
+            nome = form.cleaned_data['nome']
+            comp_fields = {f.name for f in Computador._meta.get_fields() if hasattr(f, 'name')}
+            create_kwargs = {}
+            if 'numero' in comp_fields:
+                create_kwargs['numero'] = nome
+            elif 'nome' in comp_fields:
+                create_kwargs['nome'] = nome
+            elif 'hostname' in comp_fields:
+                create_kwargs['hostname'] = nome
+
+            if 'sala' in comp_fields:
+                create_kwargs['sala'] = sala
+            elif 'sala_id' in comp_fields:
+                create_kwargs['sala_id'] = getattr(sala, 'pk', None)
+
+            try:
+                computador = Computador.objects.create(**create_kwargs)
+                if 'sala' not in create_kwargs and hasattr(computador, 'sala'):
+                    computador.sala = sala
+                    computador.save()
+            except Exception as e:
+                return render(request, 'SARC/editar_sala.html', {'sala': sala, 'form': form, 'erro': str(e), 'computadores': sala.computador_set.all()})
+            return redirect('editar_sala', sala_id=sala_id)
+    else:
+        form = ComputadorCreateForm()
+
+    computadores = sala.computador_set.all() if hasattr(sala, 'computador_set') else []
+    return render(request, 'SARC/editar_sala.html', {'sala': sala, 'form': form, 'computadores': computadores})

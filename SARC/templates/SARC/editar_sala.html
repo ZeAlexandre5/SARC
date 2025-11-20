@@ -1,0 +1,37 @@
+{% extends "SARC/base.html" %}
+{% block content %}
+<div class="container py-4">
+  <h3>Editar sala: {{ sala.nome }}</h3>
+  <p>Capacidade: {{ sala.capacidade }}</p>
+  {% if erro %}
+    <div class="alert alert-danger">{{ erro }}</div>
+  {% endif %}
+
+  <h5 class="mt-4">Adicionar computador</h5>
+  <form method="post" id="adicionarComputadorForm" class="row g-2">
+    {% csrf_token %}
+    <div class="col-md-6">
+      <input type="text" name="nome" class="form-control" placeholder="Nome / Hostname" required>
+    </div>
+    <div class="col-md-6">
+      <button class="btn btn-primary">Adicionar</button>
+    </div>
+  </form>
+
+  <h5 class="mt-4">Computadores na sala</h5>
+  <ul class="list-group">
+    {% for c in computadores %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        {{ c.numero|default:c.nome|default:c.hostname|default:c.pk }}
+        <!-- opcional: botão de remover (implemente depois) -->
+      </li>
+    {% empty %}
+      <li class="list-group-item text-muted">Nenhum computador cadastrado.</li>
+    {% endfor %}
+  </ul>
+
+  <div class="mt-4">
+    <a href="{% url 'salas' %}" class="btn btn-secondary">Voltar para salas</a>
+  </div>
+</div>
+{% endblock %}

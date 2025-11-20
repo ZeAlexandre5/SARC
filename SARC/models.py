@@ -31,7 +31,7 @@ class Usuario(AbstractUser):
     nome = models.CharField(max_length=100, blank=True)
     # temporariamente permitimos null/blank para evitar prompt durante migrações
     email = models.EmailField(max_length=254, unique=True, null=True, blank=True)
-
+    username = None  # removendo o campo username padrão
     TIPO_USUARIO_CHOICES = [
         ('bolsista', 'Bolsista'),
         ('aluno', 'Aluno'),

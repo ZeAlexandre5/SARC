@@ -16,7 +16,7 @@
                 <div class="card bg-dark bg-opacity-50 border-light text-white text-center py-3">
                     <div class="card-body">
                         <i class="fas fa-door-open fa-2x mb-2 text-primary"></i>
-                        <h3 class="fw-bold">{{ salas.count }}</h3>
+                        <h3 class="fw-bold text-white">{{ salas.count }}</h3>
                         <p class="mb-0">Salas Disponíveis</p>
                     </div>
                 </div>
@@ -25,7 +25,7 @@
                 <div class="card bg-dark bg-opacity-50 border-light text-white text-center py-3">
                     <div class="card-body">
                         <i class="fas fa-desktop fa-2x mb-2 text-success"></i>
-                        <h3 class="fw-bold">
+                        <h3 class="fw-bold text-white">
                             {% with total=0 %}
                                 {% for sala in salas %}
                                     {% widthratio sala.computador_set.count 1 1 as count %}
@@ -41,7 +41,7 @@
                 <div class="card bg-dark bg-opacity-50 border-light text-white text-center py-3">
                     <div class="card-body">
                         <i class="fas fa-users fa-2x mb-2 text-warning"></i>
-                        <h3 class="fw-bold">
+                        <h3 class="fw-bold text-white">
                             {% with total=0 %}
                                 {% for sala in salas %}
                                     {{ sala.capacidade|add:total }}
@@ -115,10 +115,17 @@
                     </div>
                     
                     <div class="card-footer bg-dark bg-opacity-50 border-light pb-3">
+                        {% if request.user.is_authenticated and request.user.tipo_usuario == 'bolsista' %}
+                        <a href="{% url 'editar_sala' sala.id_sala|default:sala.pk %}" 
+                           class="btn btn-warning w-100 py-2 btn-hover">
+                            <i class="fas fa-edit me-2"></i>Editar essa sala
+                        </a>
+                        {% else %}
                         <a href="{% url 'reservar_sala' sala.id_sala %}" 
                            class="btn btn-primary w-100 py-2 btn-hover">
                             <i class="fas fa-calendar-plus me-2"></i>Reservar Esta Sala
                         </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -136,9 +143,131 @@
         </div>
 
         <!-- Quick Actions -->
-        
+        {# Botão visível apenas para bolsistas autenticados (usa autenticação padrão do Django) #}
+        {% if request.user.is_authenticated and request.user.tipo_usuario == 'bolsista' %}
+        <div class="mb-4 d-flex justify-content-end">
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#adicionarSalaModal">
+                <i class="fas fa-plus-circle me-2"></i> Nova Sala
+            </button>
+        </div>
+        {% endif %}
+
     </div>
 </div>
+
+{# Modais para criar sala e adicionar computadores (bolsista) #}
+{% if request.user.is_authenticated and request.user.tipo_usuario == 'bolsista' %}
+<!-- Modal Adicionar Sala -->
+<div class="modal fade" id="adicionarSalaModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Adicionar Sala</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="adicionarSalaForm">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label">Nome da Sala</label>
+            <input name="nome" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Capacidade (opcional)</label>
+            <input name="capacidade" type="number" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Descrição (opcional)</label>
+            <textarea name="descricao" class="form-control" rows="3"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" id="salvarSalaBtn">Salvar Sala</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Adicionar Computador -->
+<div class="modal fade" id="adicionarComputadorModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Adicionar Computador</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="adicionarComputadorForm">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label">Nome / Hostname</label>
+            <input name="nome" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Sala</label>
+            <select name="sala_id" class="form-select" required>
+              <option value="">Escolha uma sala</option>
+              {% for sala in salas %}
+                <option value="{{ sala.id_sala|default:sala.pk }}">{{ sala.nome }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" id="salvarComputadorBtn">Salvar Computador</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // helper CSRF
+  function getCookie(name){ const v=document.cookie.match('(^|;)\\s*'+name+'\\s*=\\s*([^;]+)'); return v? v.pop(): ''; }
+  const CSRF = getCookie('csrftoken');
+
+  async function postForm(url, formElement){
+    const fd = new FormData(formElement);
+    const res = await fetch(url, { method:'POST', headers: {'X-CSRFToken': CSRF}, body: fd });
+    const j = await res.json().catch(()=> ({}));
+    return { ok: res.ok, status: res.status, json: j };
+  }
+
+  document.getElementById('salvarSalaBtn')?.addEventListener('click', async function(){
+    const form = document.getElementById('adicionarSalaForm');
+    if(!form.checkValidity()){ form.reportValidity(); return; }
+    this.disabled = true;
+    const resp = await postForm("{% url 'criar_sala' %}", form);
+    this.disabled = false;
+    if(resp.ok && resp.json.success){
+      // abrir modal de adicionar computador com a nova sala selecionada (se quiser)
+      const sala = resp.json.sala || {};
+      // recarrega página para atualizar lista de salas (mais simples)
+      location.reload();
+    } else {
+      alert(resp.json.detail || resp.json.error || 'Erro ao criar sala');
+    }
+  });
+
+  document.getElementById('salvarComputadorBtn')?.addEventListener('click', async function(){
+    const form = document.getElementById('adicionarComputadorForm');
+    if(!form.checkValidity()){ form.reportValidity(); return; }
+    this.disabled = true;
+    const resp = await postForm("{% url 'criar_computador' %}", form);
+    this.disabled = false;
+    if(resp.ok && resp.json.success){
+      location.reload();
+    } else {
+      alert(resp.json.detail || resp.json.error || 'Erro ao adicionar computador');
+    }
+  });
+})();
+</script>
+{% endif %}
 
 <style>
     .sala-card {

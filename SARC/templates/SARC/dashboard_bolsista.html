@@ -559,6 +559,73 @@
         </div>
     </div>
 
+    <!-- Modal Adicionar Sala -->
+    <div class="modal fade" id="adicionarSalaModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Adicionar Sala</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="adicionarSalaForm">
+              {% csrf_token %}
+              <div class="mb-3">
+                <label class="form-label">Nome da Sala</label>
+                <input name="nome" class="form-control" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Capacidade (opcional)</label>
+                <input name="capacidade" type="number" class="form-control">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Descrição (opcional)</label>
+                <textarea name="descricao" class="form-control" rows="3"></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button class="btn btn-primary" id="salvarSalaBtn">Salvar Sala</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Adicionar Computador -->
+    <div class="modal fade" id="adicionarComputadorModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Adicionar Computador</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="adicionarComputadorForm">
+              {% csrf_token %}
+              <div class="mb-3">
+                <label class="form-label">Nome / Hostname</label>
+                <input name="nome" class="form-control" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Sala</label>
+                <select name="sala_id" class="form-select" required>
+                  <option value="">Escolha uma sala</option>
+                  {% for sala in salas %}
+                    <option value="{{ sala.id_sala|default:sala.pk }}">{{ sala.nome }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button class="btn btn-primary" id="salvarComputadorBtn">Salvar Computador</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- toast container -->
     <div class="app-toast" id="appToast"></div>
 
@@ -717,6 +784,37 @@
                 modal.hide();
             });
         });
+
+        // usa a função getCookie/CSRF já presente no template
+        document.getElementById('salvarSalaBtn')?.addEventListener('click', async function(){
+    const form = document.getElementById('adicionarSalaForm');
+    const data = new FormData(form);
+    try {
+      const resp = await fetch("{% url 'criar_sala' %}", { method: 'POST', headers: {'X-CSRFToken': CSRF}, body: data });
+      const j = await resp.json();
+      if (resp.ok && j.success) {
+        showToast('Sala criada', 'success');
+        setTimeout(()=> location.reload(), 700);
+      } else {
+        showToast(j.error || j.detail || 'Erro ao criar sala', 'error', 4000);
+      }
+    } catch(e){ showToast('Erro de rede', 'error'); }
+  });
+
+  document.getElementById('salvarComputadorBtn')?.addEventListener('click', async function(){
+    const form = document.getElementById('adicionarComputadorForm');
+    const data = new FormData(form);
+    try {
+      const resp = await fetch("{% url 'criar_computador' %}", { method: 'POST', headers: {'X-CSRFToken': CSRF}, body: data });
+      const j = await resp.json();
+      if (resp.ok && j.success) {
+        showToast('Computador adicionado', 'success');
+        setTimeout(()=> location.reload(), 700);
+      } else {
+        showToast(j.error || j.detail || 'Erro ao adicionar computador', 'error', 4000);
+      }
+    } catch(e){ showToast('Erro de rede', 'error'); }
+  });
     </script>
 </body>
 </html>
