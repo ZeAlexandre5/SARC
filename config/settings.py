@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'SARC',
-    'Bolsistas',
 ]
 
 # usar o novo model de usuário

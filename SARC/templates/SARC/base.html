@@ -130,7 +130,15 @@
     <ul class="nav">
       <li class="nav-item"><a href="{% url 'index' %}" class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}">Início</a></li>
       <li class="nav-item"><a href="{% url 'reservas' %}" class="nav-link {% if request.resolver_match.url_name == 'reservas' %}active{% endif %}">Reservas</a></li>
-      <li class="nav-item"><a href="{% url 'salas' %}" class="nav-link {% if request.resolver_match.url_name == 'salas' %}active{% endif %}">Nova Reserva</a></li>
+      <li class="nav-item">
+        <a href="{% url 'salas' %}" class="nav-link {% if request.resolver_match.url_name == 'salas' %}active{% endif %}">
+          {% if request.user.is_authenticated and request.user.tipo_usuario == 'bolsista' %}
+            Salas
+          {% else %}
+            Nova Reserva
+          {% endif %}
+        </a>
+      </li>
 
       {% if request.user.is_authenticated %}
 
