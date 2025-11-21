@@ -62,54 +62,69 @@
                         </div>
 
                         <!-- Mapa das Salas -->
-                        <div id="labRooms" class="lab-rooms-container">
-                            {% for sala in salas %}
-                            <div class="lab-room">
-                                <h3 class="text-white">🏠 {{ sala.nome }} - <span class="text-white-50">{{ sala.computador_set.count }} computadores</span></h3>
-                                <div class="computers-grid">
-                                    {# renderiza linhas horizontais de até 6 PCs; dentro da linha grupos visuais de 3 PCs #}
-                                    {% for computador in sala.computador_set.all %}
-                                        {# abre nova linha a cada 6 itens (0,6,12,...) #}
-                                        {% if forloop.first or forloop.counter0|divisibleby:6 %}
-                                            <div class="computer-row-horizontal">
-                                        {% endif %}
+                       <div id="labRooms" class="lab-rooms-container">
 
-                                        {# abre grupo visual a cada 3 itens dentro da linha (0,3,6...) #}
-                                        {% if forloop.counter0|divisibleby:3 %}
-                                            <div class="computer-group-inline">
-                                        {% endif %}
+    {% if sala %}
+    <div class="lab-room">
+        <h3 class="text-white">
+            🏠 {{ sala.nome }} -
+            <span class="text-white-50">
+                {{ sala.computador_set.count }} computadores
+            </span>
+        </h3>
 
-                                        <div class="computer-seat-wrapper">
-                                            <div class="seat {{ computador.estado|lower }}"
-                                                 data-computer-id="{{ computador.id_computador }}"
-                                                 data-room-id="{{ sala.id_sala }}"
-                                                 data-room-name="{{ sala.nome }}"
-                                                 data-computer-number="{{ computador.numero }}"
-                                                 onclick="selectComputer(this)">
-                                                <span class="computer-number">{{ computador.numero }}</span>
-                                                <span class="tooltip">{{ computador.estado }} - PC {{ computador.numero }} - {{ sala.nome }}</span>
-                                            </div>
-                                        </div>
+        <div class="computers-grid">
 
-                                        {# fecha grupo após 3 itens ou no último item #}
-                                        {% if forloop.counter|divisibleby:3 or forloop.last %}
-                                            </div> {# .computer-group-inline #}
-                                        {% endif %}
+            {# LOOP DOS COMPUTADORES #}
+            {% for computador in sala.computador_set.all %}
+                
+                {% if forloop.first or forloop.counter0|divisibleby:6 %}
+                    <div class="computer-row-horizontal">
+                {% endif %}
 
-                                        {# fecha linha após 6 itens ou no último item #}
-                                        {% if forloop.counter|divisibleby:6 or forloop.last %}
-                                            </div> {# .computer-row-horizontal #}
-                                        {% endif %}
-                                    {% endfor %}
-                                </div>
+                {% if forloop.counter0|divisibleby:3 %}
+                    <div class="computer-group-inline">
+                {% endif %}
 
-                            </div>
-                            {% empty %}
-                            <div class="alert alert-warning bg-dark bg-opacity-25 border-light">
-                                Nenhuma sala cadastrada no sistema.
-                            </div>
-                            {% endfor %}
-                        </div>
+                <div class="computer-seat-wrapper">
+                    <div class="seat {{ computador.estado|lower }}"
+                        data-computer-id="{{ computador.id_computador }}"
+                        data-room-id="{{ sala.id_sala }}"
+                        data-room-name="{{ sala.nome }}"
+                        data-computer-number="{{ computador.numero }}"
+                        onclick="selectComputer(this)">
+                        
+                        <span class="computer-number">{{ computador.numero }}</span>
+                        <span class="tooltip">
+                            {{ computador.estado }} - PC {{ computador.numero }} - {{ sala.nome }}
+                        </span>
+                    </div>
+                </div>
+
+                {% if forloop.counter|divisibleby:3 or forloop.last %}
+                    </div> {# .computer-group-inline #}
+                {% endif %}
+
+                {% if forloop.counter|divisibleby:6 or forloop.last %}
+                    </div> {# .computer-row-horizontal #}
+                {% endif %}
+
+            {% empty %}
+                <div class="alert alert-warning bg-dark bg-opacity-25 border-light">
+                    Nenhum computador cadastrado nesta sala.
+                </div>
+            {% endfor %}
+
+        </div>
+    </div>
+
+    {% else %}
+        <div class="alert alert-warning bg-dark bg-opacity-25 border-light">
+            Sala não encontrada.
+        </div>
+    {% endif %}
+</div>
+
                     </div>
                 </div>
             </div>
@@ -467,11 +482,10 @@
         }
         // Remove seleção anterior
         document.querySelectorAll('.seat.selected').forEach(seat => {
-            seat.classList.remove('selected');
-            if (seat.classList.contains('disponível')) {
-                seat.classList.add('disponível');
-            }
-        });
+    seat.classList.remove('selected');
+    seat.classList.add('disponível'); // sempre volta a ser disponível
+});
+
 
         // Marca como selecionado
         computerElement.classList.remove('disponível');
