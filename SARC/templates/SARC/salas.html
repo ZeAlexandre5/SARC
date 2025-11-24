@@ -10,6 +10,32 @@
             <p class="lead text-white-50">Selecione uma sala para fazer sua reserva</p>
         </div>
 
+        <!-- Seleção de Data Antes de Escolher a Sala -->
+<div class="card bg-dark bg-opacity-50 border-light text-white p-4 mb-4">
+    <form method="get" id="selecionarDataForm" class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label fw-bold">Escolha a data da reserva</label>
+            <input type="date" name="data" id="dataEscolhida"
+                   class="form-control"
+                   value="{{ request.GET.data|default:'' }}"
+                   required>
+        </div>
+
+        <div class="col-md-3">
+            <button class="btn btn-primary w-100 py-2 btn-hover" type="submit">
+                <i class="fas fa-filter me-2"></i>Selecionar Data
+            </button>
+        </div>
+    </form>
+
+    {% if request.GET.data %}
+    <p class="text-white-50 mt-3">
+        <i class="fas fa-calendar-day me-1"></i>
+        Data selecionada: <strong>{{ request.GET.data }}</strong>
+    </p>
+    {% endif %}
+</div>
+
         <!-- Stats Cards -->
         <div class="row mb-5">
             <div class="col-md-4">
@@ -121,7 +147,8 @@
                             <i class="fas fa-edit me-2"></i>Editar essa sala
                         </a>
                         {% else %}
-                        <a href="{% url 'reservar_sala' sala.id_sala %}" 
+                        <a href="{% url 'reservar_sala' sala.id_sala %}?data={{ request.GET.data }}"
+ 
                            class="btn btn-primary w-100 py-2 btn-hover">
                             <i class="fas fa-calendar-plus me-2"></i>Reservar Esta Sala
                         </a>

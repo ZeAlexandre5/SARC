@@ -128,6 +128,17 @@ def reservar_sala(request, id_sala=None):
         return redirect('login')
 
     tipo_usuario = usuario.tipo_usuario
+    # cria o form normalmente
+    form = ReservaForm()
+
+# verifica se veio ?data=YYYY-MM-DD
+    data_previa = request.GET.get('data')
+    if data_previa:
+        try:
+            form.fields['data'].initial = data_previa
+        except:
+            pass
+
 
     if request.method == 'POST':
         print("DEBUG - Dados do POST:", request.POST)

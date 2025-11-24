@@ -654,26 +654,19 @@ function maybeEnableSubmit() {
 
 // Inicialização quando o DOM estiver carregado
 // Inicialização quando o DOM estiver carregado
-document.addEventListener('DOMContentLoaded', function() {
-    const dataField = document.getElementById('id_data');
-    const inputs = document.querySelectorAll('input, textarea');
-    
-    // Aplica estilos aos campos
-    inputs.forEach(input => input.classList.add('form-control'));
+document.addEventListener("DOMContentLoaded", function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const dataPrevia = urlParams.get('data');
 
-    // Event listeners para data
-    if (dataField) {
-        dataField.addEventListener('change', function() {
-            updateReservationSummary();
-            maybeEnableSubmit();
-            // ATUALIZAÇÃO: Chama a verificação de disponibilidade quando a data muda
-            fetchAvailability();
-        });
+    if (dataPrevia) {
+        const dataField = document.getElementById('id_data');
+        if (dataField) {
+            dataField.value = dataPrevia;
+            dataField.dispatchEvent(new Event('change')); // atualiza disponibilidade
+        }
     }
-
-    // Verificação inicial
-    maybeEnableSubmit();
 });
+
     function selectComputer(computerElement) {
         // Professores não selecionam computador
         if (TIPO_USUARIO === 'professor') {
