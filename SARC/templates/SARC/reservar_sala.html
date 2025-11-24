@@ -130,69 +130,107 @@
             </div>
 
             <!-- Formulário de Reserva -->
-            <div class="col-lg-4">
-                <div class="card bg-dark bg-opacity-50 border-light shadow sticky-top" style="top: 20px;">
-                    <div class="card-header bg-success bg-opacity-75 text-white py-3 border-light">
-                        <h3 class="h5 mb-0">📋 Detalhes da Reserva</h3>
-                    </div>
-                    <div class="card-body text-white">
-                        <form method="post" id="reservationForm">
-                            {% csrf_token %}
-                            {{ form.non_field_errors }}
-                            
-                            <!-- GARANTIR QUE OS CAMPOS HIDDEN ESTEJAM PRESENTES -->
-                            {{ form.sala }}
-                            {{ form.computador }}
+            <!-- Formulário de Reserva -->
+<div class="col-lg-4">
+    <div class="card bg-dark bg-opacity-50 border-light shadow sticky-top" style="top: 20px;">
+        <div class="card-header bg-success bg-opacity-75 text-white py-3 border-light">
+            <h3 class="h5 mb-0">📋 Detalhes da Reserva</h3>
+        </div>
+        <div class="card-body text-white">
+            <form method="post" id="reservationForm">
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+                
+                <!-- GARANTIR QUE OS CAMPOS HIDDEN ESTEJAM PRESENTES -->
+                {{ form.sala }}
+                {{ form.computador }}
+                <!-- Campo hidden para o horário -->
+                <input type="hidden" name="horario" id="id_horario" value="">
 
-                            <div class="reservation-summary mb-4 p-3 bg-dark bg-opacity-25 rounded border-light">
-                                <h6 class="fw-bold">Resumo da Reserva:</h6>
-                                <div id="reservationDetails">
-                                    <p class="text-white-50 mb-1">Nenhum computador selecionado</p>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">{{ form.data.label }}</label>
-                                {{ form.data }}
-                                {{ form.data.errors }}
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">{{ form.horario.label }}</label>
-                                {{ form.horario }}
-                                {{ form.horario.errors }}
-                            </div>
-
-                            <!-- Se for professor, não mostrar motivo/computador (computador já é hidden) -->
-                            {% if tipo_usuario != 'professor' %}
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">{{ form.motivo.label }}</label>
-                                {{ form.motivo }}
-                                {{ form.motivo.errors }}
-                            </div>
-                            {% endif %}
-
-                            <!-- Bolsista: opção de bloquear a sala -->
-                            {% if tipo_usuario == 'bolsista' %}
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" name="bloquear" id="id_bloquear">
-                                <label class="form-check-label text-white" for="id_bloquear">Bloquear sala (reservar sem computador)</label>
-                            </div>
-                            {% endif %}
-
-                            <button type="submit" class="btn btn-primary w-100 py-2 btn-hover" id="submitBtn" disabled>
-                                <i class="fas fa-calendar-check me-2"></i>Confirmar Reserva
-                            </button>
-
-                            <div class="mt-3 text-center">
-                                <small class="text-white-50">
-                                    <i class="fas fa-clock me-1"></i>Reserva sujeita à confirmação
-                                </small>
-                            </div>
-                        </form>
+                <div class="reservation-summary mb-4 p-3 bg-dark bg-opacity-25 rounded border-light">
+                    <h6 class="fw-bold">Resumo da Reserva:</h6>
+                    <div id="reservationDetails">
+                        <p class="text-white-50 mb-1">Nenhum computador selecionado</p>
                     </div>
                 </div>
-            </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{{ form.data.label }}</label>
+                    {{ form.data }}
+                    {{ form.data.errors }}
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold mb-3">Selecione o Horário:</label>
+                    
+                    <!-- Container dos horários -->
+                    <div class="time-slots-container">
+                        <div class="time-slot-row">
+                            <div class="time-slot" data-time="07:00:00" onclick="selectTimeSlot(this)">
+                                <div class="time-period">07:00 - 08:30</div>
+                                <div class="time-label">1º Horário</div>
+                            </div>
+                            <div class="time-slot" data-time="08:50:00" onclick="selectTimeSlot(this)">
+                                <div class="time-period">08:50 - 10:20</div>
+                                <div class="time-label">2º Horário</div>
+                            </div>
+                        </div>
+                        
+                        <div class="time-slot-row">
+                            <div class="time-slot" data-time="10:30:00" onclick="selectTimeSlot(this)">
+                                <div class="time-period">10:30 - 12:00</div>
+                                <div class="time-label">3º Horário</div>
+                            </div>
+                            <div class="time-slot" data-time="13:00:00" onclick="selectTimeSlot(this)">
+                                <div class="time-period">13:00 - 14:30</div>
+                                <div class="time-label">4º Horário</div>
+                            </div>
+                        </div>
+                        
+                        <div class="time-slot-row">
+                            <div class="time-slot" data-time="14:50:00" onclick="selectTimeSlot(this)">
+                                <div class="time-period">14:50 - 16:20</div>
+                                <div class="time-label">5º Horário</div>
+                            </div>
+                            <div class="time-slot" data-time="16:30:00" onclick="selectTimeSlot(this)">
+                                <div class="time-period">16:30 - 18:00</div>
+                                <div class="time-label">6º Horário</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="timeSlotError" class="text-danger mt-2" style="display: none;">
+                        <small><i class="fas fa-exclamation-circle me-1"></i>Selecione um horário</small>
+                    </div>
+                </div>
+
+                <!-- Se for professor, não mostrar motivo/computador (computador já é hidden) -->
+                {% if tipo_usuario != 'professor' %}
+                <div class="mb-3">
+                    <label class="form-label fw-bold">{{ form.motivo.label }}</label>
+                    {{ form.motivo }}
+                    {{ form.motivo.errors }}
+                </div>
+                {% endif %}
+
+                <!-- Bolsista: opção de bloquear a sala -->
+                {% if tipo_usuario == 'bolsista' %}
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="bloquear" id="id_bloquear">
+                    <label class="form-check-label text-white" for="id_bloquear">Bloquear sala (reservar sem computador)</label>
+                </div>
+                {% endif %}
+
+                <button type="submit" class="btn btn-primary w-100 py-2 btn-hover" id="submitBtn" disabled>
+                    <i class="fas fa-calendar-check me-2"></i>Confirmar Reserva
+                </button>
+
+                <div class="mt-3 text-center">
+                    <small class="text-white-50">
+                        <i class="fas fa-clock me-1"></i>Reserva sujeita à confirmação
+                    </small>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -438,38 +476,204 @@
     .lab-room:nth-child(1) { animation-delay: 0.1s; }
     .lab-room:nth-child(2) { animation-delay: 0.2s; }
     .lab-room:nth-child(3) { animation-delay: 0.3s; }
+
+    /* ... outros estilos existentes ... */
+
+    /* ESTILOS PARA SELEÇÃO DE HORÁRIOS */
+    .time-slots-container {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .time-slot-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .time-slot {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        padding: 15px 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+
+    .time-slot:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(52, 152, 219, 0.5);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .time-slot.selected {
+        background: rgba(52, 152, 219, 0.3);
+        border-color: #3498db;
+        box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.5);
+        transform: scale(1.02);
+    }
+
+    .time-slot.disabled {
+        background: rgba(231, 76, 60, 0.2);
+        border-color: rgba(231, 76, 60, 0.5);
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .time-slot.disabled:hover {
+        transform: none;
+        box-shadow: none;
+    }
+
+    .time-period {
+        font-size: 1rem;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 4px;
+    }
+
+    .time-slot.selected .time-period {
+        color: #3498db;
+    }
+
+    .time-slot.disabled .time-period {
+        color: #e74c3c;
+    }
+
+    .time-label {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 500;
+    }
+
+    .time-slot.selected .time-label {
+        color: rgba(52, 152, 219, 0.9);
+    }
+
+    .time-slot.disabled .time-label {
+        color: rgba(231, 76, 60, 0.7);
+    }
+
+    /* Indicador de seleção */
+    .time-slot.selected::before {
+        content: '✓';
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: #3498db;
+        color: white;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+
+    /* Responsividade para horários */
+    @media (max-width: 576px) {
+        .time-slot-row {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+        
+        .time-slot {
+            padding: 12px 8px;
+        }
+        
+        .time-period {
+            font-size: 0.9rem;
+        }
+    }
+
+    /* ... outros estilos existentes ... */
+
+    
 </style>
 
 <script>
-    let selectedComputer = null;
-    const TIPO_USUARIO = "{{ tipo_usuario|default:'' }}";
-    document.addEventListener('DOMContentLoaded', function() {
-        const inputs = document.querySelectorAll('input, select, textarea');
-        inputs.forEach(input => input.classList.add('form-control'));
+   let selectedComputer = null;
+let selectedTimeSlot = null;
+const TIPO_USUARIO = "{{ tipo_usuario|default:'' }}";
 
-        const dataField = document.getElementById('id_data');
-        const horarioField = document.getElementById('id_horario');
+// Função para selecionar horário
+// Função para selecionar horário
+function selectTimeSlot(timeSlotElement) {
+    // Não permite selecionar horários desabilitados
+    if (timeSlotElement.classList.contains('disabled')) {
+        return;
+    }
 
-        function maybeEnableSubmit() {
-            const data = dataField ? dataField.value : '';
-            const horario = horarioField ? horarioField.value : '';
-            const submitBtn = document.getElementById('submitBtn');
-            if (!submitBtn) return;
-            if (TIPO_USUARIO === 'professor' || TIPO_USUARIO === 'bolsista') {
-                // professores/bolsistas não precisam selecionar computador obrigatoriamente
-                submitBtn.disabled = !(data && horario);
-            } else {
-                submitBtn.disabled = !(data && horario && selectedComputer);
-            }
-        }
+    // Remove seleção anterior
+    if (selectedTimeSlot) {
+        selectedTimeSlot.classList.remove('selected');
+    }
 
-        if (horarioField) horarioField.addEventListener('change', function(){ updateReservationSummary(); maybeEnableSubmit(); });
-        if (dataField) dataField.addEventListener('change', function(){ updateReservationSummary(); maybeEnableSubmit(); });
+    // Marca como selecionado
+    timeSlotElement.classList.add('selected');
+    selectedTimeSlot = timeSlotElement;
 
-        // primeira verificação
-        maybeEnableSubmit();
-    });
+    // Preenche o campo hidden do horário
+    const timeValue = timeSlotElement.dataset.time;
+    document.getElementById('id_horario').value = timeValue;
 
+    // Esconde mensagem de erro
+    document.getElementById('timeSlotError').style.display = 'none';
+
+    // ATUALIZAÇÃO: Chama a verificação de disponibilidade
+    fetchAvailability();
+
+    // Atualiza o resumo e verifica se pode habilitar o botão
+    updateReservationSummary();
+    maybeEnableSubmit();
+}
+
+// Função para verificar se pode habilitar o botão de submit
+function maybeEnableSubmit() {
+    const dataField = document.getElementById('id_data');
+    const horarioField = document.getElementById('id_horario');
+    const data = dataField ? dataField.value : '';
+    const horario = horarioField ? horarioField.value : '';
+    const submitBtn = document.getElementById('submitBtn');
+
+    if (!submitBtn) return;
+
+    if (TIPO_USUARIO === 'professor' || TIPO_USUARIO === 'bolsista') {
+        // professores/bolsistas não precisam selecionar computador obrigatoriamente
+        submitBtn.disabled = !(data && horario);
+    } else {
+        submitBtn.disabled = !(data && horario && selectedComputer);
+    }
+}
+
+// Inicialização quando o DOM estiver carregado
+// Inicialização quando o DOM estiver carregado
+document.addEventListener('DOMContentLoaded', function() {
+    const dataField = document.getElementById('id_data');
+    const inputs = document.querySelectorAll('input, textarea');
+    
+    // Aplica estilos aos campos
+    inputs.forEach(input => input.classList.add('form-control'));
+
+    // Event listeners para data
+    if (dataField) {
+        dataField.addEventListener('change', function() {
+            updateReservationSummary();
+            maybeEnableSubmit();
+            // ATUALIZAÇÃO: Chama a verificação de disponibilidade quando a data muda
+            fetchAvailability();
+        });
+    }
+
+    // Verificação inicial
+    maybeEnableSubmit();
+});
     function selectComputer(computerElement) {
         // Professores não selecionam computador
         if (TIPO_USUARIO === 'professor') {
@@ -512,49 +716,59 @@
     }
 
     // Atualiza o resumo da reserva
-    function updateReservationSummary() {
-        const detailsDiv = document.getElementById('reservationDetails');
-        const data = document.getElementById('id_data').value;
-        const horario = document.getElementById('id_horario').value;
+    // Atualiza o resumo da reserva
+function updateReservationSummary() {
+    const detailsDiv = document.getElementById('reservationDetails');
+    const data = document.getElementById('id_data').value;
+    const horario = document.getElementById('id_horario').value;
+    
+    if (data && horario) {
+        const timeText = getTimeText(horario);
+        let summaryHTML = `
+            <div class="d-flex justify-content-between mb-2">
+                <span class="text-white-50">Data:</span>
+                <strong class="text-white">${formatDate(data)}</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <span class="text-white-50">Horário:</span>
+                <strong class="text-white">${timeText}</strong>
+            </div>
+        `;
         
-        if (selectedComputer && data && horario) {
-            const timeText = getTimeText(horario);
-            detailsDiv.innerHTML = `
+        if (selectedComputer) {
+            summaryHTML += `
                 <div class="d-flex justify-content-between mb-2">
                     <span class="text-white-50">Sala:</span>
                     <strong class="text-white">${selectedComputer.room}</strong>
                 </div>
-                <div class="d-flex justify-content-between mb-2">
+                <div class="d-flex justify-content-between">
                     <span class="text-white-50">Computador:</span>
                     <strong class="text-white">PC ${selectedComputer.number}</strong>
-                </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="text-white-50">Data:</span>
-                    <strong class="text-white">${formatDate(data)}</strong>
-                </div>
-                <div class="d-flex justify-content-between">
-                    <span class="text-white-50">Horário:</span>
-                    <strong class="text-white">${timeText}</strong>
                 </div>
             `;
-        } else if (selectedComputer) {
-            detailsDiv.innerHTML = `
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="text-white-50">Sala:</span>
-                    <strong class="text-white">${selectedComputer.room}</strong>
-                </div>
+        } else if (TIPO_USUARIO === 'professor' || TIPO_USUARIO === 'bolsista') {
+            summaryHTML += `
                 <div class="d-flex justify-content-between">
-                    <span class="text-white-50">Computador:</span>
-                    <strong class="text-white">PC ${selectedComputer.number}</strong>
+                    <span class="text-white-50">Sala:</span>
+                    <strong class="text-white">{{ sala.nome }}</strong>
                 </div>
-                <div class="text-warning mt-2">
-                    <small><i class="fas fa-exclamation-triangle"></i> Selecione data e horário</small>
+                <div class="text-info mt-2">
+                    <small><i class="fas fa-info-circle"></i> Reserva de sala completa</small>
                 </div>
             `;
         } else {
-            detailsDiv.innerHTML = '<p class="text-white-50 mb-1">Nenhum computador selecionado</p>';
+            summaryHTML += `
+                <div class="text-warning mt-2">
+                    <small><i class="fas fa-exclamation-triangle"></i> Selecione um computador</small>
+                </div>
+            `;
         }
+        
+        detailsDiv.innerHTML = summaryHTML;
+    } else {
+        detailsDiv.innerHTML = '<p class="text-white-50 mb-1">Selecione data e horário</p>';
     }
+}
 
     // Funções auxiliares
     function getTimeText(timeValue) {
@@ -577,98 +791,122 @@
     const CHECK_URL = "{% url 'check_availability' %}";
     const SALA_ID = "{{ sala.id_sala|default:'' }}";
 
-    async function fetchAvailability() {
-        const dataField = document.getElementById('id_data');
-        const horarioField = document.getElementById('id_horario');
-        if (!dataField || !horarioField) return;
+    // Função para verificar disponibilidade dos computadores
+async function fetchAvailability() {
+    const dataField = document.getElementById('id_data');
+    const horarioField = document.getElementById('id_horario');
+    
+    if (!dataField || !horarioField) return;
 
-        const date = dataField.value;
-        const horario = horarioField.value;
-        if (!date || !horario) {
-            markAllAvailable(); // limpa marcações se falta info
-            return;
-        }
-
-        const params = new URLSearchParams({
-            sala_id: SALA_ID,
-            date: date,
-            horario: horario
-        });
-
-        try {
-            const resp = await fetch(CHECK_URL + '?' + params.toString(), { method: 'GET' });
-            if (!resp.ok) throw new Error('Network response not ok');
-            const data = await resp.json();
-            applyAvailability(data);
-        } catch (err) {
-            console.error('Erro ao checar disponibilidade:', err);
-        }
+    const date = dataField.value;
+    const horario = horarioField.value;
+    
+    if (!date || !horario) {
+        markAllAvailable(); // limpa marcações se falta info
+        return;
     }
 
-    async function applyAvailability(data) {
-        const seats = document.querySelectorAll('.computers-grid .seat');
-        const reserved = (data && data.reserved) ? data.reserved.map(String) : [];
-        const reservedAll = data && data.reserved_all;
+    const params = new URLSearchParams({
+        sala_id: "{{ sala.id_sala|default:'' }}",
+        date: date,
+        horario: horario
+    });
 
-        // mostrar banner de sala bloqueada
-        let banner = document.getElementById('salaBloqueadaBanner');
-        if (!banner) {
-          const body = document.querySelector('.card-body.text-white');
-          if (body) {
+    try {
+        const resp = await fetch("{% url 'check_availability' %}?" + params.toString(), { 
+            method: 'GET' 
+        });
+        
+        if (!resp.ok) throw new Error('Network response not ok');
+        const data = await resp.json();
+        applyAvailability(data);
+    } catch (err) {
+        console.error('Erro ao checar disponibilidade:', err);
+        // Em caso de erro, marca todos como disponíveis
+        markAllAvailable();
+    }
+}
+
+// Aplica a disponibilidade aos computadores
+function applyAvailability(data) {
+    const seats = document.querySelectorAll('.seat');
+    const reserved = (data && data.reserved) ? data.reserved.map(String) : [];
+    const reservedAll = data && data.reserved_all;
+
+    // Mostrar/ocultar banner de sala bloqueada
+    let banner = document.getElementById('salaBloqueadaBanner');
+    if (!banner) {
+        const body = document.querySelector('.card-body.text-white');
+        if (body) {
             banner = document.createElement('div');
             banner.id = 'salaBloqueadaBanner';
             banner.className = 'alert alert-warning mt-3';
             banner.style.display = 'none';
-            banner.innerText = 'Esta sala está bloqueada para o horário selecionado.';
+            banner.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Esta sala está bloqueada para o horário selecionado.';
             body.prepend(banner);
-          }
         }
+    }
+    
+    if (reservedAll) {
+        banner && (banner.style.display = 'block');
+    } else {
+        banner && (banner.style.display = 'none');
+    }
+
+    // Aplica o estado aos computadores
+    seats.forEach(seat => {
+        const id = seat.dataset.computerId;
+        
+        // Remove todas as classes de estado
+        seat.classList.remove('reservado', 'disponível', 'selected');
+        
         if (reservedAll) {
-          banner && (banner.style.display = 'block');
+            // Sala toda bloqueada
+            seat.classList.add('reservado');
+        } else if (reserved.includes(String(id))) {
+            // Computador específico reservado
+            seat.classList.add('reservado');
         } else {
-          banner && (banner.style.display = 'none');
-        }
-
-        seats.forEach(seat => {
-            const id = seat.dataset.computerId;
-            seat.classList.remove('reservado');
-            if (reservedAll) {
-                seat.classList.add('reservado');
-                seat.classList.remove('disponível', 'selected');
-            } else if (reserved.includes(String(id))) {
-                seat.classList.add('reservado');
-                seat.classList.remove('disponível', 'selected');
-            } else {
-                if (!seat.classList.contains('ocupado')) {
-                    seat.classList.remove('reservado', 'selected');
-                    seat.classList.add('disponível');
-                }
-            }
-        });
-
-        if (reservedAll) {
-            selectedComputer = null;
-            const compField = document.getElementById('id_computador');
-            if (compField) compField.value = '';
-            updateReservationSummary();
-        }
-    }
-
-    function markAllAvailable() {
-        const seats = document.querySelectorAll('.computers-grid .seat');
-        seats.forEach(seat => {
+            // Computador disponível (só se não estiver ocupado)
             if (!seat.classList.contains('ocupado')) {
-                seat.classList.remove('reservado', 'selected');
                 seat.classList.add('disponível');
+            } else {
+                seat.classList.add('ocupado');
             }
-        });
-    }
+        }
+    });
 
-    // conectar às mudanças de data/horário
-    document.addEventListener('DOMContentLoaded', function() {
-        const dataField = document.getElementById('id_data');
-        const horarioField = document.getElementById('id_horario');
-        if (dataField) dataField.addEventListener('change', fetchAvailability);
+    // Se a sala está bloqueada, limpa qualquer seleção
+    if (reservedAll) {
+        selectedComputer = null;
+        const compField = document.getElementById('id_computador');
+        if (compField) compField.value = '';
+        updateReservationSummary();
+    }
+}
+
+// Marca todos os computadores como disponíveis
+function markAllAvailable() {
+    const seats = document.querySelectorAll('.seat');
+    seats.forEach(seat => {
+        seat.classList.remove('reservado', 'selected');
+        if (!seat.classList.contains('ocupado')) {
+            seat.classList.add('disponível');
+        }
+    });
+    
+    // Oculta o banner de sala bloqueada
+    const banner = document.getElementById('salaBloqueadaBanner');
+    if (banner) {
+        banner.style.display = 'none';
+    }
+}
+
+// conectar às mudanças de data/horário
+document.addEventListener('DOMContentLoaded', function() {
+    const dataField = document.getElementById('id_data');
+    const horarioField = document.getElementById('id_horario');
+    if (dataField) dataField.addEventListener('change', fetchAvailability);
         if (horarioField) horarioField.addEventListener('change', fetchAvailability);
 
         // chamar uma vez no carregamento (se já houver valores)
