@@ -130,9 +130,9 @@
             </div>
 
             <!-- Formulário de Reserva -->
-            <!-- Formulário de Reserva -->
+<!-- Formulário de Reserva -->
 <div class="col-lg-4">
-    <div class="card bg-dark bg-opacity-50 border-light shadow sticky-top" style="top: 20px;">
+    <div class="card bg-dark bg-opacity-50 border-light shadow" style="position: sticky; top: 100px; z-index: 100;">
         <div class="card-header bg-success bg-opacity-75 text-white py-3 border-light">
             <h3 class="h5 mb-0">📋 Detalhes da Reserva</h3>
         </div>
@@ -234,6 +234,7 @@
         </div>
     </div>
 </div>
+
 
 <style>
     /* Estilos Gerais */
@@ -594,7 +595,68 @@
 
     /* ... outros estilos existentes ... */
 
-    
+      /* ... outros estilos existentes ... */
+
+    /* CORREÇÃO DO STICKY MENU */
+    .sticky-menu-fix {
+        position: sticky;
+        top: 100px; /* Ajuste conforme a altura do seu header */
+        z-index: 100;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+    }
+
+    /* Garantir que o container principal tenha espaço suficiente */
+    .container-fluid.py-5 {
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
+    }
+
+    /* Melhorar a rolagem em mobile */
+    @media (max-width: 991px) {
+        .sticky-menu-fix {
+            position: relative;
+            top: 0;
+            margin-bottom: 2rem;
+        }
+        
+        /* Em mobile, o menu não fica sticky */
+        .col-lg-4 .card {
+            position: relative !important;
+            top: 0 !important;
+        }
+    }
+
+    /* Garantir que o z-index está correto */
+    .navbar {
+        z-index: 1000;
+    }
+
+    .col-lg-4 .card {
+        z-index: 100;
+    }
+    footer {
+    width: 100%;
+    display: block;
+}
+
+footer {
+    margin: 0;
+    padding: 0;
+}
+
+footer .container {
+    max-width: 100% !important;
+    padding: 0;
+}
+
+footer {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+
+    /* ... outros estilos existentes ... */
 </style>
 
 <script>
