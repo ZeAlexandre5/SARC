@@ -38,13 +38,18 @@
     {% for c in computadores %}
       <li class="list-group-item d-flex justify-content-between align-items-center">
 
-        <!-- Mostra corretamente o número do PC -->
-        <span>Computador {{ c.numero }}</span>
+  <span>Computador {{ c.numero }}</span>
 
-        <!-- BOTÃO DE REMOVER (opcional, comentado) -->
-       
+  <form method="post" action="{% url 'remover_computador' c.id_computador %}" 
+        onsubmit="return confirm('Tem certeza que deseja remover este computador?');">
+    {% csrf_token %}
+    <button class="btn btn-sm btn-danger">
+      <i class="fas fa-trash"></i> Remover
+    </button>
+  </form>
 
-      </li>
+</li>
+
     {% empty %}
       <li class="list-group-item text-muted">Nenhum computador cadastrado.</li>
     {% endfor %}

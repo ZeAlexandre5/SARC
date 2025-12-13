@@ -9,6 +9,7 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_POST
 from django.contrib.auth import login as auth_login
 from django.db import models
+from django.db.models import Count, Sum
 
 
 # helper: atualiza automaticamente reservas pendentes para 'ausente' após 24h do horário agendado
@@ -94,16 +95,26 @@ def reserva(request):
 @login_required
 def salas(request):
     today = date.today()
+
     reservas = Reserva.objects.filter(data=today)
     salas = Sala.objects.all()
-    computadores = Computador.objects.all()
+
+    # 🔥 CÁLCULOS CORRETOS
+    total_computadores = 0
+    total_vagas = 0
+
+    for sala in salas:
+        total_computadores += sala.computador_set.count()
+        total_vagas += sala.capacidade or 0
+
     context = {
         'salas': salas,
-        'computadores': computadores,
         'reservas': reservas,
+        'total_computadores': total_computadores,
+        'total_vagas': total_vagas,
     }
-    return render(request, "SARC/salas.html", context)
 
+    return render(request, "SARC/salas.html", context)
 @login_required
 def reservar_sala(request, id_sala=None):
     sala = None
@@ -662,3 +673,13 @@ def editar_sala(request, sala_id):
         'erro': erro,
         'computadores': computadores
     })
+
+@login_required
+def remover_computador(request, computador_id):
+    computador = get_object_or_404(Computador, id=computador_id)
+    sala_id = computador.sala.id_sala  # ou computador.sala.id
+
+    if request.method == "POST":
+        computador.delete()
+
+    return redirect('editar_sala', sala_id)

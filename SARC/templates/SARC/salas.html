@@ -52,14 +52,9 @@
                     <div class="card-body">
                         <i class="fas fa-desktop fa-2x mb-2 text-success"></i>
                         <h3 class="fw-bold text-white">
-                            {% with total=0 %}
-                                {% for sala in salas %}
-                                    {% widthratio sala.computador_set.count 1 1 as count %}
-                                    {{ count|add:total }}
-                                {% endfor %}
-                            {% endwith %}
+                            <h3 class="fw-bold text-white">{{ total_computadores }}</h3>
+                            <p class="mb-0">Computadores</p>    
                         </h3>
-                        <p class="mb-0">Computadores</p>
                     </div>
                 </div>
             </div>
@@ -68,13 +63,10 @@
                     <div class="card-body">
                         <i class="fas fa-users fa-2x mb-2 text-warning"></i>
                         <h3 class="fw-bold text-white">
-                            {% with total=0 %}
-                                {% for sala in salas %}
-                                    {{ sala.capacidade|add:total }}
-                                {% endfor %}
-                            {% endwith %}
+                            <h3 class="fw-bold text-white">{{ total_vagas }}</h3>
+                            <p class="mb-0">Vagas Totais</p>
+
                         </h3>
-                        <p class="mb-0">Vagas Totais</p>
                     </div>
                 </div>
             </div>

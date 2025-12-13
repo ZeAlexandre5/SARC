@@ -25,4 +25,5 @@ urlpatterns = [
 
     # rota de logout (view padrão do Django)
     path('logout/', LogoutView.as_view(next_page='index'), name='logout'),
+    path('computador/remover/<int:computador_id>/', views.remover_computador, name='remover_computador'),
 ]
