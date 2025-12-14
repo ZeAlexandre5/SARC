@@ -24,4 +24,4 @@ Facilitar o agendamento dos laboratórios de informática do IFRN - Campus São 
 - Ari Oliveira (https://github.com/Aribarreto)
 
 ## Endereço do Site.
-http://35.184.116.203/
+http://35.192.90.183/
