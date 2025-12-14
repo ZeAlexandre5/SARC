@@ -264,45 +264,67 @@ def cancelar_reserva(request, id_reserva):
 @login_required
 def dashboard_bolsista(request):
     usuario = request.user
-    if not request.user.is_authenticated:
-        return redirect('login')
-    
-    try:
-        usuario = request.user
-        # Verificar se é bolsista
-        if usuario.tipo_usuario != 'bolsista':
-            return redirect('reservas')
-    except Usuario.DoesNotExist:
-        return redirect('login')
-    
-    # Estatísticas
-    total_reservas = Reserva.objects.count()
+
+    # Verificar se é bolsista
+    if usuario.tipo_usuario != 'bolsista':
+        return redirect('reservas')
+
     hoje = date.today()
+
+    # =========================
+    # BASE DAS RESERVAS (FILTRO)
+    # =========================
+    reservas_qs = Reserva.objects.select_related('sala', 'usuario')
+
+    # ===== FILTROS VIA GET =====
+    data_filtro = request.GET.get('data')
+    sala_filtro = request.GET.get('sala')
+    status_filtro = request.GET.get('status')
+
+    if data_filtro:
+        reservas_qs = reservas_qs.filter(data=data_filtro)
+
+    if sala_filtro:
+        reservas_qs = reservas_qs.filter(sala_id=sala_filtro)
+
+    if status_filtro:
+        reservas_qs = reservas_qs.filter(presenca=status_filtro)
+
+    # =========================
+    # RESERVAS RECENTES (TOP 10)
+    # =========================
+    reservas = reservas_qs.order_by('-data', '-horario')[:10]
+
+    # =========================
+    # ESTATÍSTICAS (GERAIS)
+    # =========================
+    total_reservas = Reserva.objects.count()
     reservas_hoje = Reserva.objects.filter(data=hoje).count()
-    
-    # Calcular salas ocupadas hoje
-    salas_ocupadas_ids = Reserva.objects.filter(data=hoje).values_list('sala', flat=True).distinct()
-    salas_ocupadas = len(salas_ocupadas_ids)
-    
-    # Para simplificar, vamos considerar que salas bloqueadas são aquelas com reserva de bolsista
+
+    # Salas ocupadas hoje
+    salas_ocupadas = Reserva.objects.filter(data=hoje)\
+        .values('sala').distinct().count()
+
+    # Salas bloqueadas (regra atual sua)
     salas_bloqueadas = Reserva.objects.filter(
-        data=hoje, 
+        data=hoje,
         usuario__tipo_usuario='bolsista',
         motivo__icontains='bloqueio'
     ).count()
-    
-    # Reservas recentes (últimas 10)
-    reservas = Reserva.objects.all().order_by('-data', '-horario')[:10]
-    
-    # Status das salas (simplificado)
+
+    # =========================
+    # STATUS DAS SALAS (HOJE)
+    # =========================
     salas = Sala.objects.all()
     for sala in salas:
-        reserva_hoje = Reserva.objects.filter(sala=sala, data=hoje).exists()
-        if reserva_hoje:
+        if Reserva.objects.filter(sala=sala, data=hoje).exists():
             sala.status = 'ocupada'
         else:
             sala.status = 'disponivel'
-    
+
+    # =========================
+    # CONTEXT
+    # =========================
     context = {
         'total_reservas': total_reservas,
         'reservas_hoje': reservas_hoje,
@@ -312,7 +334,7 @@ def dashboard_bolsista(request):
         'salas': salas,
         'hoje': hoje,
     }
-    
+
     return render(request, "SARC/dashboard_bolsista.html", context)
 
 @login_required
