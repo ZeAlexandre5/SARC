@@ -59,7 +59,7 @@ def login(request):
     else:
         form = LoginForm()
 
-    return render(request, "SARC/Login.html", {'form': form, 'erro': erro})
+    return render(request, "SARC/login.html", {'form': form, 'erro': erro})
 
 # Create your views here.
 
