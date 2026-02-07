@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'SARC',
+    'SARC.apps.SarcConfig',
+
 ]
 
 # usar o novo model de usuário
