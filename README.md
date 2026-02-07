@@ -23,5 +23,7 @@ Facilitar o agendamento dos laboratórios de informática do IFRN - Campus São 
 ## 🧍🏻‍♂ Orienador do projeto 
 - Ari Oliveira (https://github.com/Aribarreto)
 
-## Endereço do Site.
-http://35.192.90.183/
+## Endereços do Site.
+http://34.58.125.225/(José Alexandre)
+http://136.115.173.172/ (Artur Felipe)
+
