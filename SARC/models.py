@@ -85,7 +85,21 @@ class Reserva(models.Model):
         default='pendente'
     )
 
+    bloqueio = models.BooleanField(default=False)  
+
     def __str__(self):
         return f"Reserva {self.id_reserva} - {self.data} {self.horario} - {self.sala} - {self.motivo} - {'Presente' if self.presenca == 'presente' else 'Ausente' if self.presenca == 'ausente' else 'Pendente'}"
 # (Removida qualquer definição de Form que estivesse dentro deste arquivo;
 #  formulários devem ficar em SARC/forms.py)
+
+class DiaBloqueado(models.Model):
+    bloqueio_id = models.AutoField(primary_key=True)
+    data = models.DateField(unique=True)
+    motivo = models.CharField(max_length=255)
+
+    criado_por = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True)
+
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Dia Bloqueado: {self.data} - Motivo: {self.motivo}"

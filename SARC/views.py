@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from datetime import datetime, timedelta, date
 from django.utils import timezone
-from .models import Reserva, Sala, Computador, Usuario
-from .forms import UsuarioForm, LoginForm, ReservaForm, ProfessorReservaForm, SalaCreateForm, ComputadorCreateForm
+from .models import Reserva, Sala, Computador, Usuario, DiaBloqueado
+from .forms import UsuarioForm, LoginForm, ReservaForm, ProfessorReservaForm, SalaCreateForm, ComputadorCreateForm, DiaBloqueadoForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponseBadRequest
@@ -705,3 +705,69 @@ def remover_computador(request, computador_id):
         computador.delete()
 
     return redirect('editar_sala', sala_id)
+
+
+from .models import DiaBloqueado
+from .forms import DiaBloqueadoForm
+
+@login_required
+def gerenciar_calendario(request):
+
+    if request.user.tipo_usuario != 'bolsista':
+        return redirect('salas')
+
+    if request.method == 'POST':
+
+        form = DiaBloqueadoForm(request.POST)
+
+        if form.is_valid():
+
+            bloqueio = form.save(commit=False)
+
+            bloqueio.criado_por = request.user
+
+            bloqueio.save()
+
+            messages.success(
+                request,
+                'Data bloqueada com sucesso!'
+            )
+
+            return redirect('gerenciar_calendario')
+
+    else:
+        form = DiaBloqueadoForm()
+
+    datas = DiaBloqueado.objects.order_by('data')
+
+    return render(
+        request,
+        'SARC/gerenciar_calendario.html',
+        {
+            'form': form,
+            'datas': datas
+        }
+    )
+
+@login_required
+def remover_bloqueio(request, bloqueio_id):
+    if request.user.tipo_usuario != 'bolsista':
+        return redirect('salas')
+
+    bloqueio = DiaBloqueado.objects.get(bloqueio_id=bloqueio_id)
+
+    bloqueio.delete()
+
+    messages.success(
+        request,
+        'Data removida com sucesso.'
+    )
+
+    return redirect('gerenciar_calendario')
+
+def datas_bloqueadas(request):
+    datas = list(DiaBloqueado.objects.values_list('data', flat=True))
+
+    datas = [d.strftime('%Y-%m-%d') for d in datas]
+
+    return JsonResponse(datas, safe=False)
