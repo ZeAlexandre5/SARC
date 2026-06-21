@@ -2,7 +2,7 @@
 {% load static %}
 {% block content %}
 
-<div class="container-fluid py-5" style="background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://source.unsplash.com/1600x900/?computer,laboratory') center/cover no-repeat fixed; min-height: 100vh;">
+<div class="container-fluid py-5 page-bg-cover">
     <div class="container">
         <!-- Header -->
         <div class="text-center mb-5">
@@ -15,7 +15,7 @@
     <form method="get" id="selecionarDataForm" class="row g-3 align-items-end">
         <div class="col-md-4">
             <label class="form-label fw-bold">Escolha a data da reserva</label>
-            <input type="date" name="data" id="dataEscolhida"
+            <input type="text" name="data" id="dataEscolhida"
                    class="form-control"
                    value="{{ request.GET.data|default:'' }}"
                    required>
@@ -26,7 +26,24 @@
                 <i class="fas fa-filter me-2"></i>Selecionar Data
             </button>
         </div>
+
+        <div class="mt-2">
+
+    <span style="color:red;">
+        ■
+    </span>
+    Feriados e bloqueios
+
+    <br>
+
+    <span style="color:gray;">
+        ■
+    </span>
+    Finais de semana
+
+</div>
     </form>
+
 
     {% if request.GET.data %}
     <p class="text-white-50 mt-3">
@@ -402,11 +419,103 @@
     max-width: 100%;
 }
 
+.flatpickr-calendar {
+    border-radius: 0;
+    box-shadow: none;
+    border: 1px solid #ccc;
+    font-family: Arial, sans-serif;
+}
+
+.flatpickr-current-month {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.flatpickr-weekday {
+    font-weight: bold;
+}
+
+.flatpickr-day {
+    border-radius: 4px;
+}
+
+.flatpickr-day.selected {
+    background: #757575;
+    border-color: #757575;
+}
+
+.flatpickr-day.today {
+    border: 2px solid black;
+}
+
+.flatpickr-day.flatpickr-disabled {
+    background-color: #ffd6d6 !important;
+    color: #b00000 !important;
+    text-decoration: line-through;
+    cursor: not-allowed;
+}
 </style>
 
 <!-- Font Awesome para ícones -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- adição do flatpickr -->
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", async function() {
+
+    const response = await fetch("/datas-bloqueadas/");
+    const datasBloqueadas = await response.json();
+
+    flatpickr("#dataEscolhida", {
+        locale: "pt",
+        dateFormat: "Y-m-d",
+        minDate: "today",
+
+        disable: [
+            function(date) {
+                return (
+                    date.getDay() === 0 ||
+                    date.getDay() === 6
+                );
+            },
+
+            ...datasBloqueadas
+        ]
+    });
+
+    flatpickr("#dataEscolhida", {onDayCreate: function(dObj, dStr, fp, dayElem) {
+
+        const dia = dayElem.dateObj.getDay();
+
+        if (dia === 0 || dia === 6) {
+            dayElem.style.backgroundColor = "#eeeeee";
+            dayElem.style.color = "#888";
+        }
+    }})
+
+});
+</script>
+
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    flatpickr("#dataEscolhida", {
+        locale: flatpickr.l10ns.pt,
+        dateFormat: "Y-m-d"
+    });
+
+});
+</script>
 {% endblock %}

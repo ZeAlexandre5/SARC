@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-from .models import Usuario, Reserva, Sala, Computador
+from .models import Usuario, Reserva, Sala, Computador, DiaBloqueado
 
 # ==========================
 # FORMULÁRIO DE USUÁRIO
@@ -107,7 +107,7 @@ class ReservaForm(forms.ModelForm):
         model = Reserva
         fields = ['data', 'horario', 'sala', 'computador', 'motivo']
         widgets = {
-            'data': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'data': forms.DateInput(attrs={'class': 'form-control', 'autocomplete': 'off'}),
             'motivo': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Digite o motivo da reserva...'}),
         }
         labels = {
@@ -151,6 +151,8 @@ class ReservaForm(forms.ModelForm):
             if conflito.exists():
                 raise ValidationError("Já existe uma reserva para esta sala e horário.")
 
+        if DiaBloqueado.objects.filter(data=data).exists():
+            raise ValidationError("Não é possível reservar para esta data, pois está bloqueada.")
         return cleaned_data
 
 
@@ -183,7 +185,7 @@ class ProfessorReservaForm(forms.ModelForm):
         model = Reserva
         fields = ['data', 'horario', 'sala', 'motivo']
         widgets = {
-            'data': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'data': forms.DateInput(attrs={'class': 'form-control', 'autocomplete': 'off'}),
             'motivo': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Motivo da reserva'}),
         }
         labels = {
@@ -202,6 +204,8 @@ class ProfessorReservaForm(forms.ModelForm):
             hoje = timezone.localdate()
             if data < hoje:
                 raise ValidationError("Não é possível reservar para dias no passado.")
+            if data.weekday() in [5, 6]:  # sábado ou domingo
+                raise ValidationError("Não é possível reservar para fins de semana.")
 
         if data and horario and sala:
             conflito = Reserva.objects.filter(
@@ -238,4 +242,11 @@ class ComputadorCreateForm(forms.Form):
 
 
 
-
+class DiaBloqueadoForm(forms.ModelForm):
+    class Meta:
+        model = DiaBloqueado
+        fields = ['data', 'motivo']
+        widgets = {
+            'data': forms.DateInput(attrs={'class': 'form-control', 'autocomplete': 'off'}),
+            'motivo': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Motivo do bloqueio...'}),
+        }

@@ -1,0 +1,92 @@
+{% extends 'SARC/base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h2>Calendário do Laboratório</h2>
+
+    <div class="card p-3 mb-4">
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            {{ form.as_p }}
+
+            <button
+                type="submit"
+                class="btn btn-danger">
+
+                Bloquear Data
+
+            </button>
+
+        </form>
+
+    </div>
+
+    <div class="card p-3">
+
+        <h4>Datas Bloqueadas</h4>
+
+        <table class="table">
+
+            <thead>
+
+                <tr>
+                    <th>Data</th>
+                    <th>Motivo</th>
+                    <th>Ação</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for data in datas %}
+
+                <tr>
+
+                    <td>{{ data.data }}</td>
+
+                    <td>{{ data.motivo }}</td>
+
+                    <td>
+                        <p>ID: {{ data.id }}</p>
+                        <p>Data: {{ data }}</p>
+                        <a
+                        href="{% url 'remover_bloqueio' data.bloqueio_id %}"
+                        class="btn btn-sm btn-danger">
+
+                            Remover
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+
+                    <td colspan="3">
+
+                        Nenhuma data bloqueada.
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}
