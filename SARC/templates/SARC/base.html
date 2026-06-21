@@ -126,66 +126,43 @@
   <a href="/" class="d-flex align-items-center text-decoration-none">
     <img src="{% static 'SARC/IMG/SARC_IFRN.png' %}" alt="Logo SARC">
   </a>
+<ul class="nav">
+<ul class="nav">
+    <li class="nav-item">
+      {% if request.user.is_authenticated and request.user.tipo_usuario == 'bolsista' %}
+        <a href="{% url 'dashboard_bolsista' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard_bolsista' %}active{% endif %}">Início</a>
+      {% else %}
+        <a href="{% url 'index' %}" class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}">Início</a>
+      {% endif %}
+    </li>
 
-  <ul class="nav">
-
-    <!-- LINK DE INÍCIO (DINÂMICO) -->
-    {% if request.user.is_authenticated and request.user.tipo_usuario == 'bolsista' %}
+    <li class="nav-item"><a href="{% url 'reservas' %}" class="nav-link {% if request.resolver_match.url_name == 'reservas' %}active{% endif %}">Reservas</a></li>
+    <li class="nav-item"><a href="{% url 'salas' %}" class="nav-link {% if request.resolver_match.url_name == 'salas' %}active{% endif %}">Salas</a></li>
+    {% if request.user.is_authenticated %}
       <li class="nav-item">
-        <a href="{% url 'dashboard_bolsista' %}" 
-           class="nav-link {% if request.resolver_match.url_name == 'dashboard_bolsista' %}active{% endif %}">
-           Início
-        </a>
-      </li>
-    {% else %}
-      <li class="nav-item">
-        <a href="{% url 'index' %}" 
-           class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}">
-           Início
+        <a href="{% url 'notificacoes' %}" 
+           class="nav-link position-relative {% if request.resolver_match.url_name == 'notificacoes' %}active{% endif %}">
+          Notificações
+          {% if tem_notificacoes_novas %}
+            <span class="position-absolute top-2 start-100 translate-middle p-1 bg-primary border border-light rounded-circle" style="width: 10px; height: 10px;"></span>
+          {% endif %}
         </a>
       </li>
     {% endif %}
 
-    <!-- RESERVAS -->
-    <li class="nav-item">
-      <a href="{% url 'reservas' %}" 
-         class="nav-link {% if request.resolver_match.url_name == 'reservas' %}active{% endif %}">
-        Reservas
-      </a>
-    </li>
-
-    <!-- SALAS / NOVA RESERVA -->
-    <li class="nav-item">
-      <a href="{% url 'salas' %}" 
-         class="nav-link {% if request.resolver_match.url_name == 'salas' %}active{% endif %}">
-        {% if request.user.is_authenticated and request.user.tipo_usuario == 'bolsista' %}
-          Salas
-        {% else %}
-          Nova Reserva
-        {% endif %}
-      </a>
-    </li>
-
     {% if request.user.is_authenticated %}
-
-      <!-- BOTÃO DE SAIR -->
       <li class="nav-item">
         <form method="post" action="{% url 'logout' %}" class="d-inline">
           {% csrf_token %}
-          <button type="submit" class="nav-link logout-btn ">
+          <button type="submit" class="nav-link logout-btn">
             Sair
           </button>
         </form>
       </li>
-
     {% else %}
-
-      <!-- OPCÕES PARA QUEM NÃO ESTÁ LOGADO -->
       <li class="nav-item"><a href="{% url 'login' %}" class="nav-link">Entrar</a></li>
       <li class="nav-item"><a href="{% url 'cadastro' %}" class="nav-link">Cadastrar-se</a></li>
-
     {% endif %}
-
   </ul>
 </nav>
 

@@ -87,5 +87,15 @@ class Reserva(models.Model):
 
     def __str__(self):
         return f"Reserva {self.id_reserva} - {self.data} {self.horario} - {self.sala} - {self.motivo} - {'Presente' if self.presenca == 'presente' else 'Ausente' if self.presenca == 'ausente' else 'Pendente'}"
-# (Removida qualquer definição de Form que estivesse dentro deste arquivo;
-#  formulários devem ficar em SARC/forms.py)
+
+class Notificacao(models.Model):
+    id_notificacao = models.AutoField(primary_key=True)
+    remetente = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='mensagens_enviadas')
+    mensagem = models.TextField()
+    resposta = models.TextField(null=True, blank=True)
+    data_envio = models.DateTimeField(auto_now_add=True)
+    data_resposta = models.DateTimeField(null=True, blank=True)
+    lida = models.BooleanField(default=False)  # Indica se o aluno viu a resposta
+
+    def __str__(self):
+        return f"Mensagem de {self.remetente.nome} - {self.data_envio.strftime('%d/%m/%Y')}"

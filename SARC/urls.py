@@ -22,7 +22,7 @@ urlpatterns = [
     path('bolsista/criar_sala/', views.criar_sala, name='criar_sala'),
     path('bolsista/criar_computador/', views.criar_computador, name='criar_computador'),
     path('salas/<int:sala_id>/editar/', views.editar_sala, name='editar_sala'),
-
+    path("notificacoes/", views.notificacoes, name="notificacoes"),
     # rota de logout (view padrão do Django)
     path('logout/', LogoutView.as_view(next_page='index'), name='logout'),
     path('computador/remover/<int:computador_id>/', views.remover_computador, name='remover_computador'),

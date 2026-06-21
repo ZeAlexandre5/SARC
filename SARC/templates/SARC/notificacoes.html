@@ -1,0 +1,110 @@
+{% extends "SARC/base.html" %}
+
+{% block title %}Notificações e Suporte - SARC{% endblock %}
+
+{% block content %}
+<div class="container my-5" style="max-width: 850px;">
+    
+    <div class="d-flex align-items-center mb-4">
+        <h2 class="fw-bold" style="color: #940404;">Central de Notificações e Suporte</h2>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card shadow-sm mb-5 border-0" style="border-radius: 12px;">
+        <div class="card-header bg-white py-3 fw-semibold text-secondary">
+            {% if request.user.tipo_usuario == 'bolsista' %}Nova Mensagem Direta para Usuário{% else %}Nova mensagem para a administração{% endif %}
+        </div>
+        <div class="card-body">
+            <form method="post" action="{% url 'notificacoes' %}">
+                {% csrf_token %}
+                
+                {% if request.user.tipo_usuario == 'bolsista' %}
+                <div class="mb-3">
+                    <label for="destinatario" class="form-label text-muted">Selecione o Aluno/Professor destinatário:</label>
+                    <select class="form-select" id="destinatario" name="destinatario" required>
+                        <option value="" selected disabled>Escolha um usuário...</option>
+                        {% for aluno in alunos %}
+                            <option value="{{ aluno.id }}">{{ aluno.nome }} (Matrícula: {{ aluno.matricula }}) - {{ aluno.tipo_usuario|title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+
+                <div class="mb-3">
+                    <label for="mensagem" class="form-label text-muted">Conteúdo da mensagem:</label>
+                    <textarea class="form-control" id="mensagem" name="mensagem" rows="4" placeholder="Digite aqui o conteúdo..." required></textarea>
+                </div>
+                <div class="text-end">
+                    <button type="submit" class="btn text-white px-4" style="background-color: #940404; font-weight: 500;">
+                        Enviar Mensagem
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <h4 class="mb-3 text-secondary fw-semibold">Histórico de Mensagens</h4>
+    
+    {% if not notificacoes %}
+        <div class="text-center py-5 bg-light rounded shadow-sm">
+            <p class="text-muted m-0">Nenhuma notificação ou mensagem encontrada.</p>
+        </div>
+    {% else %}
+        <div class="d-flex flex-column gap-3">
+            {% for n in notificacoes %}
+                <div class="card shadow-sm border-0" style="border-radius: 12px;">
+                    <div class="card-body p-4">
+                        
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge {% if n.resposta %}bg-success{% else %}bg-warning text-dark{% endif %} mb-2">
+                                    {% if n.resposta %}Respondido{% else %}Pendente de Análise{% endif %}
+                                </span>
+                                {% if request.user.tipo_usuario == 'bolsista' %}
+                                    <h6 class="m-0 fw-bold">Por: {{ n.remetente.nome }} <small class="text-muted">({{ n.remetente.matricula }})</small></h6>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">{{ n.data_envio|date:"d/m/Y H:i" }}</small>
+                        </div>
+
+                        <div class="bg-light p-3 rounded mb-3 text-secondary" style="border-left: 4px solid #940404;">
+                            <strong>Mensagem:</strong> {{ n.mensagem }}
+                        </div>
+
+                        {% if n.resposta %}
+                            <div class="p-3 rounded text-dark position-relative" style="background-color: #f1fcf4; border-left: 4px solid #198754; margin-left: 20px;">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="small fw-bold text-success">↩️ Resposta:</span>
+                                    <span class="small text-muted">{{ n.data_resposta|date:"d/m/Y H:i" }}</span>
+                                </div>
+                                <p class="m-0">{{ n.resposta }}</p>
+                            </div>
+                        {% else %}
+                            {% if request.user.tipo_usuario == 'bolsista' %}
+                                <form method="post" action="{% url 'notificacoes' %}" class="mt-3" style="margin-left: 20px;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="destinatario" value="{{ n.remetente.id }}">
+                                    <div class="input-group">
+                                        <input type="text" name="mensagem" class="form-control" placeholder="Escreva a resposta rápida para este usuário..." required>
+                                        <button class="btn text-white" type="submit" style="background-color: #940404;">Responder</button>
+                                    </div>
+                                </form>
+                            {% endif %}
+                        {% endif %}
+
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

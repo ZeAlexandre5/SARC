@@ -234,6 +234,12 @@
             <a class="nav-link" href="{% url 'dashboard_bolsista' %}"><i class="fas fa-tachometer-alt me-2"></i> Inicio</a>
             <a class="nav-link" href="{% url 'reservas' %}"><i class="fas fa-calendar-check me-2"></i> Reservas</a>
             <a class="nav-link" href="{% url 'salas' %}"><i class="fas fa-desktop me-2"></i> Salas</a>
+            <a href="{% url 'notificacoes' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if request.resolver_match.url_name == 'notificacoes' %}active{% endif %}">
+    <span>Central de Notificações</span>
+    {% if tem_notificacoes_novas %}
+        <span class="badge bg-primary rounded-pill" style="width: 12px; height: 12px; p-0">&nbsp;</span>
+    {% endif %}
+</a>
             <a class="nav-link" href="{% url 'login' %}"><i class="fas fa-sign-out-alt me-2"></i> Sair</a>
         </nav>
     </div>

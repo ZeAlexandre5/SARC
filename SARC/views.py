@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from datetime import datetime, timedelta, date
 from django.utils import timezone
-from .models import Reserva, Sala, Computador, Usuario
+from .models import Reserva, Sala, Computador, Usuario, Notificacao
 from .forms import UsuarioForm, LoginForm, ReservaForm, ProfessorReservaForm, SalaCreateForm, ComputadorCreateForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -698,10 +698,75 @@ def editar_sala(request, sala_id):
 
 @login_required
 def remover_computador(request, computador_id):
-    computador = get_object_or_404(Computador, id=computador_id)
-    sala_id = computador.sala.id_sala  # ou computador.sala.id
+    # Correção do campo id para id_computador de acordo com o seu models.py
+    computador = get_object_or_404(Computador, id_computador=computador_id)
+    sala_id = computador.sala.id_sala
 
     if request.method == "POST":
         computador.delete()
 
-    return redirect('editar_sala', sala_id)
+    return redirect('editar_sala', sala_id=sala_id)
+
+
+@login_required
+def notificacoes(request):
+    usuario = request.user
+    
+    if request.method == 'POST':
+        if usuario.tipo_usuario == 'bolsista':
+            destinatario_id = request.POST.get('destinatario')
+            mensagem_texto = request.POST.get('mensagem')
+            
+            if destinatario_id and mensagem_texto:
+                # 1. Tenta encontrar se já existe uma mensagem PENDENTE desse aluno para respondermos nela diretamente
+                notificacao_pendente = Notificacao.objects.filter(
+                    remetente_id=destinatario_id, 
+                    resposta__isnull=True
+                ).order_by('data_envio').first()
+                
+                if notificacao_pendente:
+                    # Se achou a pergunta pendente, preenche a resposta nela! (Isso muda o status para Respondido)
+                    notificacao_pendente.resposta = mensagem_texto
+                    notificacao_pendente.data_resposta = timezone.now()
+                    notificacao_pendente.lida = False
+                    notificacao_pendente.save()
+                    messages.success(request, f'Resposta enviada para {notificacao_pendente.remetente.nome} com sucesso!')
+                else:
+                    # Se não havia nenhuma pergunta pendente do aluno (o bolsista quis começar a conversa do zero)
+                    destinatario = get_object_or_404(Usuario, pk=destinatario_id)
+                    Notificacao.objects.create(
+                        remetente=destinatario, 
+                        mensagem=f"[Iniciada pelo Bolsista {usuario.nome}]: {mensagem_texto}",
+                        resposta=f"Mensagem enviada por: {usuario.nome}", 
+                        data_resposta=timezone.now(),
+                        lida=False 
+                    )
+                    messages.success(request, f'Mensagem enviada para {destinatario.nome} com sucesso!')
+            else:
+                messages.error(request, 'Selecione um aluno e digite uma mensagem.')
+        else:
+            # ... mantém o bloco do else do Aluno exatamente igual como já está ...
+            mensagem_texto = request.POST.get('mensagem')
+            if mensagem_texto:
+                Notificacao.objects.create(remetente=usuario, mensagem=mensagem_texto, lida=False)
+                messages.success(request, 'Sua mensagem foi enviada ao administrador com sucesso!')
+            else:
+                messages.error(request, 'A mensagem não pode estar vazia.')
+        return redirect('notificacoes')
+
+    alunos = None
+    if usuario.tipo_usuario == 'bolsista':
+        notificacoes_lista = Notificacao.objects.all().order_by('-data_envio')
+        alunos = Usuario.objects.filter(tipo_usuario__in=['aluno', 'professor']).order_by('nome')
+    else:
+        notificacoes_lista = Notificacao.objects.filter(remetente=usuario).order_by('-data_envio')
+        # Correção aqui para evitar falhas se a tabela Notificacao ainda não tiver sofrido migração do campo lida
+        try:
+            Notificacao.objects.filter(remetente=usuario, resposta__isnull=False, lida=False).update(lida=True)
+        except Exception:
+            pass
+
+    return render(request, "SARC/notificacoes.html", {
+        'notificacoes': notificacoes_lista,
+        'alunos': alunos
+    })
