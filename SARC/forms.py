@@ -117,11 +117,16 @@ class ReservaForm(forms.ModelForm):
 
     def __init__(self, *args, sala=None, **kwargs):
         super().__init__(*args, **kwargs)
+
         if sala:
             self.fields['sala'].initial = sala
             self.fields['computador'].queryset = Computador.objects.filter(sala=sala)
         else:
             self.fields['computador'].queryset = Computador.objects.all()
+
+        # Mantém a data recebida da tela de salas
+        if self.initial.get("data"):
+            self.fields["data"].initial = self.initial["data"]
 
     def clean(self):
         cleaned_data = super().clean()
@@ -135,7 +140,8 @@ class ReservaForm(forms.ModelForm):
             hoje = timezone.localdate()
             if data < hoje:
                 raise ValidationError("Não é possível reservar para dias no passado.")
-
+        if data.weekday() in [5, 6]:
+            raise ValidationError("Não é possível reservar aos sábados e domingos.")
         if not sala:
             raise ValidationError("Sala não especificada.")
 

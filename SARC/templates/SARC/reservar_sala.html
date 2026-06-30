@@ -716,37 +716,51 @@ function maybeEnableSubmit() {
 
 // Inicialização quando o DOM estiver carregado
 // Inicialização quando o DOM estiver carregado
+let datePickerInstance = null;
+
 document.addEventListener("DOMContentLoaded", async function() {
     const response = await fetch("/datas_bloqueadas/");
     const datasBloqueadas = await response.json();
-    flatpickr("#id_data", {
-        locale: "pt",
-        dateFormat: "d/m/Y",
-        minDate: "today",
+
+    datePickerInstance = flatpickr("#id_data", {
+        locale: flatpickr.l10ns.pt,
+        dateFormat: "Y-m-d",
         altInput: true,
         altFormat: "d/m/Y",
-
+        allowInput: true,
+        minDate: "today",
         disable: [
             function(date) {
                 return (
                     date.getDay() === 0 || // domingo
                     date.getDay() === 6    // sábado
                 );
-            }
-        ]
+            },
+            ...datasBloqueadas
+        ],
+        onChange: function(selectedDates, dateStr) {
+            fetchAvailability();
+            updateReservationSummary();
+            maybeEnableSubmit();
+        }
     });
 
     const urlParams = new URLSearchParams(window.location.search);
     const dataPrevia = urlParams.get('data');
 
-    if (dataPrevia) {
+    if (dataPrevia && datePickerInstance) {
+        datePickerInstance.setDate(dataPrevia, true, "Y-m-d");
+    } else if (dataPrevia) {
         const dataField = document.getElementById('id_data');
-
         if (dataField) {
             dataField.value = dataPrevia;
             dataField.dispatchEvent(new Event('change'));
         }
     }
+
+    fetchAvailability();
+    updateReservationSummary();
+    maybeEnableSubmit();
 });
 
     function selectComputer(computerElement) {
@@ -978,15 +992,7 @@ function markAllAvailable() {
 }
 
 // conectar às mudanças de data/horário
-document.addEventListener('DOMContentLoaded', function() {
-    const dataField = document.getElementById('id_data');
-    const horarioField = document.getElementById('id_horario');
-    if (dataField) dataField.addEventListener('change', fetchAvailability);
-        if (horarioField) horarioField.addEventListener('change', fetchAvailability);
-
-        // chamar uma vez no carregamento (se já houver valores)
-        fetchAvailability();
-    });
+// A configuração do datepicker já registra o onChange, portanto não é necessário duplicar o listener.
 </script>
 
 <!-- Adicionando Font Awesome para ícones -->

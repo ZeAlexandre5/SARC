@@ -469,15 +469,16 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", async function() {
-
-    const response = await fetch("/datas-bloqueadas/");
+    const response = await fetch("{% url 'datas_bloqueadas' %}");
     const datasBloqueadas = await response.json();
 
     flatpickr("#dataEscolhida", {
-        locale: "pt",
+        locale: flatpickr.l10ns.pt,
         dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d/m/Y",
+        allowInput: true,
         minDate: "today",
-
         disable: [
             function(date) {
                 return (
@@ -485,37 +486,16 @@ document.addEventListener("DOMContentLoaded", async function() {
                     date.getDay() === 6
                 );
             },
-
             ...datasBloqueadas
-        ]
-    });
-
-    flatpickr("#dataEscolhida", {onDayCreate: function(dObj, dStr, fp, dayElem) {
-
-        const dia = dayElem.dateObj.getDay();
-
-        if (dia === 0 || dia === 6) {
-            dayElem.style.backgroundColor = "#eeeeee";
-            dayElem.style.color = "#888";
+        ],
+        onDayCreate: function(dObj, dStr, fp, dayElem) {
+            const dia = dayElem.dateObj.getDay();
+            if (dia === 0 || dia === 6 || dayElem.classList.contains('flatpickr-disabled')) {
+                dayElem.style.backgroundColor = "#ffd6d6";
+                dayElem.style.color = "#b00000";
+            }
         }
-    }})
-
-});
-</script>
-
-<link rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-
-    flatpickr("#dataEscolhida", {
-        locale: flatpickr.l10ns.pt,
-        dateFormat: "Y-m-d"
     });
-
 });
 </script>
 {% endblock %}

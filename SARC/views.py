@@ -139,17 +139,7 @@ def reservar_sala(request, id_sala=None):
         return redirect('login')
 
     tipo_usuario = usuario.tipo_usuario
-    # cria o form normalmente
-    form = ReservaForm()
-
-# verifica se veio ?data=YYYY-MM-DD
     data_previa = request.GET.get('data')
-    if data_previa:
-        try:
-            form.fields['data'].initial = data_previa
-        except:
-            pass
-
 
     if request.method == 'POST':
         print("DEBUG - Dados do POST:", request.POST)
@@ -202,7 +192,17 @@ def reservar_sala(request, id_sala=None):
             print("DEBUG - Erros do formulário:", form.errors)
             messages.error(request, 'Erro no formulário. Verifique os dados.')
     else:
-        form = ReservaForm(initial={'sala': sala}, sala=sala)
+        initial = {'sala': sala}
+        if data_previa:
+            from datetime import datetime
+            try:
+                initial['data'] = datetime.strptime(data_previa, '%Y-%m-%d').date()
+            except ValueError:
+                try:
+                    initial['data'] = datetime.strptime(data_previa, '%d/%m/%Y').date()
+                except ValueError:
+                    initial['data'] = data_previa
+        form = ReservaForm(initial=initial, sala=sala)
 
     salas = Sala.objects.all().prefetch_related('computador_set')
     computadores = Computador.objects.all()
