@@ -706,3 +706,123 @@ def remover_computador(request, computador_id):
         computador.delete()
 
     return redirect('editar_sala', sala_id=sala_id)
+
+@login_required
+def notificacoes(request):
+    usuario = request.user
+    
+    if request.method == 'POST':
+        if usuario.tipo_usuario == 'bolsista':
+            destinatario_id = request.POST.get('destinatario')
+            mensagem_texto = request.POST.get('mensagem')
+            
+            if destinatario_id and mensagem_texto:
+                notificacao_pendente = Notificacao.objects.filter(
+                    remetente_id=destinatario_id, 
+                    resposta__isnull=True
+                ).order_by('data_envio').first()
+                
+                if notificacao_pendente:
+                    notificacao_pendente.resposta = message_texto
+                    notificacao_pendente.data_resposta = timezone.now()
+                    notificacao_pendente.lida = False
+                    notificacao_pendente.save()
+                    messages.success(request, f'Resposta enviada para {notificacao_pendente.remetente.nome} com sucesso!')
+                else:
+                    destinatario = get_object_or_404(Usuario, pk=destinatario_id)
+                    Notificacao.objects.create(
+                        remetente=destinatario, 
+                        mensagem=f"[Iniciada pelo Bolsista {usuario.nome}]: {mensagem_texto}",
+                        resposta=f"Mensagem enviada por: {usuario.nome}", 
+                        data_resposta=timezone.now(),
+                        lida=False 
+                    )
+                    messages.success(request, f'Mensagem enviada para {destinatario.nome} com sucesso!')
+            else:
+                messages.error(request, 'Selecione um aluno e digite uma mensagem.')
+        else:
+            mensagem_texto = request.POST.get('mensagem')
+            if mensagem_texto:
+                Notificacao.objects.create(remetente=usuario, mensagem=mensagem_texto, lida=False)
+                messages.success(request, 'Sua mensagem foi enviada ao administrador com sucesso!')
+            else:
+                messages.error(request, 'A mensagem não pode estar vazia.')
+        return redirect('notificacoes')
+
+    alunos = None
+    if usuario.tipo_usuario == 'bolsista':
+        notificacoes_lista = Notificacao.objects.all().order_by('-data_envio')
+        alunos = Usuario.objects.filter(tipo_usuario__in=['aluno', 'professor']).order_by('nome')
+    else:
+        notificacoes_lista = Notificacao.objects.filter(remetente=usuario).order_by('-data_envio')
+        try:
+            Notificacao.objects.filter(remetente=usuario, resposta__isnull=False, lida=False).update(lida=True)
+        except Exception:
+            pass
+
+    return render(request, "SARC/notificacoes.html", {
+        'notificacoes': notificacoes_lista,
+        'alunos': alunos
+    })
+
+@login_required
+def gerenciar_calendario(request):
+
+    if request.user.tipo_usuario != 'bolsista':
+        return redirect('salas')
+
+    if request.method == 'POST':
+
+        form = DiaBloqueadoForm(request.POST)
+
+        if form.is_valid():
+
+            bloqueio = form.save(commit=False)
+
+            bloqueio.criado_por = request.user
+
+            bloqueio.save()
+
+            messages.success(
+                request,
+                'Data bloqueada com sucesso!'
+            )
+
+            return redirect('gerenciar_calendario')
+
+    else:
+        form = DiaBloqueadoForm()
+
+    datas = DiaBloqueado.objects.order_by('data')
+
+    return render(
+        request,
+        'SARC/gerenciar_calendario.html',
+        {
+            'form': form,
+            'datas': datas
+        }
+    )
+
+@login_required
+def remover_bloqueio(request, bloqueio_id):
+    if request.user.tipo_usuario != 'bolsista':
+        return redirect('salas')
+
+    bloqueio = DiaBloqueado.objects.get(bloqueio_id=bloqueio_id)
+
+    bloqueio.delete()
+
+    messages.success(
+        request,
+        'Data removida com sucesso.'
+    )
+
+    return redirect('gerenciar_calendario')
+
+def datas_bloqueadas(request):
+    datas = list(DiaBloqueado.objects.values_list('data', flat=True))
+
+    datas = [d.strftime('%Y-%m-%d') for d in datas]
+
+    return JsonResponse(datas, safe=False)
