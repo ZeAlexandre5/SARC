@@ -723,7 +723,7 @@ def notificacoes(request):
                 ).order_by('data_envio').first()
                 
                 if notificacao_pendente:
-                    notificacao_pendente.resposta = message_texto
+                    notificacao_pendente.resposta = mensagem_texto
                     notificacao_pendente.data_resposta = timezone.now()
                     notificacao_pendente.lida = False
                     notificacao_pendente.save()
