@@ -34,7 +34,7 @@
       <li class="nav-item">
         <a href="{% url 'notificacoes' %}" 
            class="nav-link position-relative {% if request.resolver_match.url_name == 'notificacoes' %}active{% endif %}">
-          Notificações
+          Suporte
           {% if tem_notificacoes_novas %}
             <span class="position-absolute top-2 start-100 translate-middle p-1 bg-primary border border-light rounded-circle" style="width: 10px; height: 10px;"></span>
           {% endif %}
