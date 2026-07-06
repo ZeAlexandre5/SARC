@@ -1,0 +1,32 @@
+##  Requisitos Funcionais (RF)
+* **RF-001 (Cadastro de Usuários):** O sistema deve permitir que novos usuários se cadastrem informando Matrícula, Nome, Email, Senha e Tipo de Usuário (Aluno, Professor, Bolsista).
+* **RF-002 (Autenticação/Login):** O sistema deve autenticar os usuários com base na Matrícula e Senha.
+* **RF-003 (Controle de Níveis de Acesso):** O sistema deve restringir ou liberar telas dependendo do perfil (ex: apenas Bolsistas acessam o Dashboard e criam salas; apenas Alunos/Professores realizam reservas).
+* **RF-004 (Logout Seguro):** O sistema deve permitir que o usuário encerre sua sessão de forma segura usando o método POST.
+
+* **RF-005 (Criação de Salas):** O sistema deve permitir que o Bolsista cadastre novas salas definindo nome e capacidade de alunos.
+* **RF-006 (Gerenciamento de Computadores):** O sistema deve permitir a inclusão de computadores atrelados a uma sala específica e a remoção física deles daquela sala.
+* **RF-007 (Bloqueio de Salas/Dias):** O sistema deve permitir que a administração realize o bloqueio de salas ou dias inteiros para manutenção ou eventos (campo `bloqueio` e endpoints de API).
+
+* **RF-008 (Solicitação de Reserva):** O sistema deve permitir que Alunos e Professores reservem uma sala indicando data, horário, motivo e, se aplicável, um computador específico.
+* **RF-009 (Validação de Conflitos):** O sistema deve impedir que duas reservas utilizem a mesma sala no mesmo dia e horário.
+* **RF-010 (Validação de Datas):** O sistema deve proibir a realização de agendamentos para datas retroativas (no passado).
+* **RF-011 (Edição e Cancelamento):** O usuário deve ser capaz de alterar os dados ou cancelar sua própria reserva.
+* **RF-012 (Controle de Presença):** O sistema deve permitir que a presença seja marcada como "Presente" ou "Ausente".
+* **RF-013 (Rotina Automática de Falta/No-show):** O sistema deve marcar de forma automática como "Ausente" qualquer reserva pendente que tenha ultrapassado 24 horas da data agendada.
+
+* **RF-014 (Envio de Mensagens/Dúvidas):** O aluno ou professor deve ser capaz de enviar mensagens de dúvida diretamente ao administrador/bolsista do sistema.
+* **RF-015 (Resposta Rápida Inline):** O Bolsista deve poder responder diretamente às mensagens pendentes dos alunos a partir de um formulário simplificado, mudando o status daquela notificação para "Respondido".
+* **RF-016 (Alerta Visual Global/Bolinha Azul):** O sistema deve exibir um indicador visual na barra de navegação sempre que houver mensagens pendentes de análise (para o bolsista) ou novas respostas não lidas (para o aluno).
+
+---
+
+## Requisitos Não Funcionais (RNF)
+
+* **RNF-001 (Linguagem e Framework):** O sistema deve ser desenvolvido obrigatoriamente utilizando **Python 3.13+** e o framework web **Django 6.x**.
+* **RNF-002 (Persistência de Dados):** O sistema deve utilizar em ambiente de desenvolvimento o banco de dados **SQLite3** (`db.sqlite3`), mapeado através do ORM nativo do Django.
+
+* **RNF-003 (Criptografia de Senhas):** Nenhuma senha de usuário pode ser gravada em texto limpo no banco de dados; deve-se usar criptografia/hashing seguro (função `set_password` do Django).
+* **RNF-004 (Proteção de Rotas):** Todas as páginas críticas e operacionais devem exigir login obrigatório do usuário (`@login_required`).
+* **RNF-005 (Proteção contra Ataques Web):** O sistema deve mitigar vulnerabilidades comuns, como ataques CSRF (Cross-Site Request Forgery), exigindo a tag `{% csrf_token %}` em formulários POST.
+* **RNF-006 (Interface Responsiva e Inteligente):** A barra de menu (`base.html`) deve se adaptar e recalcular o destino do link "Início" de forma dinâmica com base nas permissões de quem está logado (seja direcionando para a Home comum ou para o Dashboard).
