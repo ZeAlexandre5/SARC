@@ -113,3 +113,46 @@ class DiaBloqueado(models.Model):
 
     def __str__(self):
         return f"Dia Bloqueado: {self.data} - Motivo: {self.motivo}"
+
+
+class Projeto(models.Model):
+    id_projeto = models.AutoField(primary_key=True)
+    titulo = models.CharField(max_length=150)
+    descricao = models.TextField()
+    data_inicio = models.DateField()
+    data_limite = models.DateField()
+    participantes = models.ManyToManyField(Usuario, related_name='projetos')
+    criado_por = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='projetos_criados')
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['data_limite', '-criado_em']
+
+    def __str__(self):
+        return f"Projeto #{self.id_projeto} - {self.titulo}"
+
+
+class AnotacaoProjeto(models.Model):
+    id_anotacao = models.AutoField(primary_key=True)
+    projeto = models.ForeignKey(Projeto, on_delete=models.CASCADE, related_name='anotacoes')
+    autor = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='anotacoes_de_projeto')
+    conteudo = models.TextField()
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-criado_em']
+
+
+class ArquivoProjeto(models.Model):
+    id_arquivo = models.AutoField(primary_key=True)
+    projeto = models.ForeignKey(Projeto, on_delete=models.CASCADE, related_name='arquivos')
+    enviado_por = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='arquivos_de_projeto')
+    arquivo = models.FileField(upload_to='projetos/%Y/%m/')
+    enviado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-enviado_em']
+
+    @property
+    def nome(self):
+        return self.arquivo.name.rsplit('/', 1)[-1]

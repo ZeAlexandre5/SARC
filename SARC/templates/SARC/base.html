@@ -31,6 +31,9 @@
     <li class="nav-item"><a href="{% url 'reservas' %}" class="nav-link {% if request.resolver_match.url_name == 'reservas' %}active{% endif %}">Reservas</a></li>
     <li class="nav-item"><a href="{% url 'salas' %}" class="nav-link {% if request.resolver_match.url_name == 'salas' %}active{% endif %}">Salas</a></li>
     {% if request.user.is_authenticated %}
+      <li class="nav-item"><a href="{% url 'projetos' %}" class="nav-link {% if request.resolver_match.url_name == 'projetos' or request.resolver_match.url_name == 'novo_projeto' or request.resolver_match.url_name == 'detalhe_projeto' %}active{% endif %}">Projetos</a></li>
+    {% endif %}
+    {% if request.user.is_authenticated %}
       <li class="nav-item">
         <a href="{% url 'notificacoes' %}" 
            class="nav-link position-relative {% if request.resolver_match.url_name == 'notificacoes' %}active{% endif %}">

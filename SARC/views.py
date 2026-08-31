@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from datetime import datetime, timedelta, date
 from django.utils import timezone
-from .models import Reserva, Sala, Computador, Usuario, DiaBloqueado, Notificacao
-from .forms import UsuarioForm, LoginForm, ReservaForm, ProfessorReservaForm, SalaCreateForm, ComputadorCreateForm, DiaBloqueadoForm
+from .models import Reserva, Sala, Computador, Usuario, DiaBloqueado, Notificacao, Projeto
+from .forms import UsuarioForm, LoginForm, ReservaForm, ProfessorReservaForm, SalaCreateForm, ComputadorCreateForm, DiaBloqueadoForm, ProjetoForm, AnotacaoProjetoForm, ArquivoProjetoForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponseBadRequest
@@ -65,6 +65,70 @@ def login(request):
 
 def index(request):
     return render(request,"SARC/index.html")
+
+
+@login_required
+def projetos(request):
+    projetos_usuario = Projeto.objects.filter(participantes=request.user).prefetch_related('participantes').distinct()
+    return render(request, 'SARC/projetos.html', {'projetos': projetos_usuario})
+
+
+@login_required
+def novo_projeto(request):
+    if request.method == 'POST':
+        form = ProjetoForm(request.POST, usuario=request.user)
+        if form.is_valid():
+            projeto = form.save(commit=False)
+            projeto.criado_por = request.user
+            projeto.save()
+            projeto.participantes.set(list(form.cleaned_data['participantes']) + [request.user])
+            messages.success(request, f'Projeto #{projeto.id_projeto} criado com sucesso.')
+            return redirect('detalhe_projeto', id_projeto=projeto.id_projeto)
+    else:
+        form = ProjetoForm(usuario=request.user, initial={'participantes': [request.user.pk]})
+    return render(request, 'SARC/novo_projeto.html', {'form': form})
+
+
+@login_required
+def detalhe_projeto(request, id_projeto):
+    projeto = get_object_or_404(
+        Projeto.objects.prefetch_related('participantes', 'anotacoes__autor', 'arquivos__enviado_por'),
+        id_projeto=id_projeto,
+    )
+    if not projeto.participantes.filter(pk=request.user.pk).exists():
+        messages.error(request, 'Você não tem permissão para acessar este projeto.')
+        return redirect('projetos')
+
+    anotacao_form = AnotacaoProjetoForm()
+    arquivo_form = ArquivoProjetoForm()
+    if request.method == 'POST':
+        acao = request.POST.get('acao')
+        if acao == 'anotar':
+            anotacao_form = AnotacaoProjetoForm(request.POST)
+            if anotacao_form.is_valid():
+                anotacao = anotacao_form.save(commit=False)
+                anotacao.projeto = projeto
+                anotacao.autor = request.user
+                anotacao.save()
+                messages.success(request, 'Anotação adicionada ao projeto.')
+                return redirect('detalhe_projeto', id_projeto=projeto.id_projeto)
+        elif acao == 'enviar_arquivo':
+            arquivo_form = ArquivoProjetoForm(request.POST, request.FILES)
+            if arquivo_form.is_valid():
+                arquivo = arquivo_form.save(commit=False)
+                arquivo.projeto = projeto
+                arquivo.enviado_por = request.user
+                arquivo.save()
+                messages.success(request, 'Arquivo armazenado no projeto.')
+                return redirect('detalhe_projeto', id_projeto=projeto.id_projeto)
+        else:
+            return HttpResponseBadRequest('Ação de projeto inválida.')
+
+    return render(request, 'SARC/detalhe_projeto.html', {
+        'projeto': projeto,
+        'anotacao_form': anotacao_form,
+        'arquivo_form': arquivo_form,
+    })
 
 @login_required
 def reserva(request):

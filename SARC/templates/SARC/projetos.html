@@ -1,0 +1,10 @@
+{% extends 'SARC/base.html' %}
+{% block title %}Projetos - SARC{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4"><div><h1 class="fw-bold mb-1">Meus projetos</h1><p class="text-muted mb-0">Acompanhe atividades desenvolvidas durante suas reservas.</p></div><a href="{% url 'novo_projeto' %}" class="btn btn-primary px-4"><i class="fas fa-plus me-2"></i>Novo projeto</a></div>
+  {% if messages %}{% for message in messages %}<div class="alert alert-{{ message.tags }}">{{ message }}</div>{% endfor %}{% endif %}
+  {% if projetos %}<div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">{% for projeto in projetos %}<div class="col"><article class="card h-100 shadow-sm border-0"><div class="card-body d-flex flex-column p-4"><div class="d-flex justify-content-between gap-3 mb-3"><span class="badge text-bg-secondary">ID #{{ projeto.id_projeto }}</span><small class="text-muted">Entrega: {{ projeto.data_limite|date:'d/m/Y' }}</small></div><h2 class="h5 fw-bold">{{ projeto.titulo }}</h2><p class="text-muted">{{ projeto.descricao|truncatewords:22 }}</p><div class="mt-auto pt-3 border-top small"><div class="mb-3"><strong>Participantes:</strong> {{ projeto.participantes.count }}</div><a href="{% url 'detalhe_projeto' projeto.id_projeto %}" class="btn btn-outline-dark w-100"><i class="fas fa-folder-open me-2"></i>Detalhar projeto</a></div></div></article></div>{% endfor %}</div>
+  {% else %}<div class="card border-0 shadow-sm text-center p-5"><i class="fas fa-diagram-project fa-3x text-muted mb-3"></i><h2 class="h4">Nenhum projeto cadastrado</h2><p class="text-muted">Crie seu primeiro projeto para centralizar anotações e arquivos.</p><div><a href="{% url 'novo_projeto' %}" class="btn btn-primary">Criar novo projeto</a></div></div>{% endif %}
+</div>
+{% endblock %}

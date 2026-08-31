@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-from .models import Usuario, Reserva, Sala, Computador, DiaBloqueado
+from .models import Usuario, Reserva, Sala, Computador, DiaBloqueado, Projeto, AnotacaoProjeto, ArquivoProjeto
 
 # ==========================
 # FORMULÁRIO DE USUÁRIO
@@ -256,3 +256,49 @@ class DiaBloqueadoForm(forms.ModelForm):
             'data': forms.DateInput(attrs={'class': 'form-control', 'autocomplete': 'off'}),
             'motivo': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Motivo do bloqueio...'}),
         }
+
+
+class ProjetoForm(forms.ModelForm):
+    class Meta:
+        model = Projeto
+        fields = ['titulo', 'descricao', 'data_inicio', 'data_limite', 'participantes']
+        widgets = {
+            'titulo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex.: Aplicativo de biblioteca'}),
+            'descricao': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Descreva o objetivo do projeto...'}),
+            'data_inicio': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'data_limite': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'participantes': forms.SelectMultiple(attrs={'class': 'form-select', 'size': 6}),
+        }
+        labels = {
+            'titulo': 'Nome do projeto', 'descricao': 'Descrição', 'data_inicio': 'Data de início',
+            'data_limite': 'Data limite de entrega', 'participantes': 'Participantes (IDs de usuários)',
+        }
+
+    def __init__(self, *args, usuario=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        # O criador é incluído pela view mesmo que não selecione outros usuários.
+        self.fields['participantes'].required = False
+        self.fields['participantes'].queryset = Usuario.objects.order_by('nome', 'matricula')
+        self.fields['participantes'].label_from_instance = lambda usuario: f"ID {usuario.pk} — {usuario.nome or 'Sem nome'} ({usuario.matricula})"
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get('data_inicio') and cleaned_data.get('data_limite') and cleaned_data['data_limite'] < cleaned_data['data_inicio']:
+            self.add_error('data_limite', 'A data limite deve ser posterior ou igual à data de início.')
+        return cleaned_data
+
+
+class AnotacaoProjetoForm(forms.ModelForm):
+    class Meta:
+        model = AnotacaoProjeto
+        fields = ['conteudo']
+        widgets = {'conteudo': forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'Registre uma atualização, ideia ou atividade...'})}
+        labels = {'conteudo': 'Nova anotação'}
+
+
+class ArquivoProjetoForm(forms.ModelForm):
+    class Meta:
+        model = ArquivoProjeto
+        fields = ['arquivo']
+        widgets = {'arquivo': forms.ClearableFileInput(attrs={'class': 'form-control'})}
+        labels = {'arquivo': 'Arquivo'}
