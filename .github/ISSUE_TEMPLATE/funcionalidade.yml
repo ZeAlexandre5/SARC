@@ -1,0 +1,44 @@
+name: Funcionalidade
+description: Registre uma funcionalidade ou melhoria percebida pelo usuário.
+title: "Projetos"
+labels: ["enhancement"]
+
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objetivo
+      description: essa nossa aba no projeto adicionado permite que o usuário possa criar uma espécie de diario do projeto.
+      placeholder: "Como uma nova aba, quero que ela possa ser acessada para criar esses projetos, para que os usuários possa tem um local onde eles poderão anotar as coisas do projeto e salvar as coisas mais importantes sem perder de vista."
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critérios de aceitação
+      description: Liste condições objetivas e verificáveis.
+      placeholder: |
+        - Poder ser Acessável
+        - Criar um projeto
+        - Ver detalhes de um projeto
+        - poder alterar/editar um projeto
+    validations:
+      required: true
+
+  - type: input
+    id: screens
+    attributes:
+      label: Link das telas ou protótipo
+      description: Informe o endereço das telas, do protótipo ou do fluxo visual, caso exista.
+      placeholder: "https://www.figma.com/design/..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: observations
+    attributes:
+      label: Observações
+      description: Acrescente contexto, referências ou restrições relevantes.
+    validations:
+      required: false
