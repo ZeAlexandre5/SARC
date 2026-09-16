@@ -53,6 +53,10 @@
             color:rgba(255,255,255,0.9);
             margin-bottom:6px;
         }
+        .sidebar:not(.expanded) .page-label,
+        .sidebar:not(.expanded) .sidebar-label {
+            display: none;
+        }
         .sidebar .nav {
             margin-top: 10px;
             padding: 0 8px;
@@ -65,8 +69,15 @@
             border-radius:6px;
             color: rgba(255,255,255,0.9);
         }
+        .sidebar:not(.expanded) .nav-link .me-2 {
+            margin-right: 0 !important;
+        }
         
-        .main-content { margin-left:72px; transition: margin-left .25s ease; }
+        .main-content {
+            margin-left: 72px;
+            padding: 0 16px;
+            transition: margin-left .25s ease;
+        }
         .sidebar.expanded + .main-content { margin-left:250px; }
         
         .header {
@@ -97,6 +108,14 @@
             border-bottom: 1px solid var(--border-color);
             font-weight: 600;
             padding: 15px 20px;
+        }
+
+        .reservas-section {
+            margin-left: 72px;
+        }
+
+        .sidebar.expanded ~ .main-content .reservas-section {
+            margin-left: 250px;
         }
         
         .stats-card {
@@ -231,16 +250,16 @@
             </div>
         </div>
         <nav class="nav flex-column">
-            <a class="nav-link" href="{% url 'dashboard_bolsista' %}"><i class="fas fa-tachometer-alt me-2"></i> Inicio</a>
-            <a class="nav-link" href="{% url 'reservas' %}"><i class="fas fa-calendar-check me-2"></i> Reservas</a>
-            <a class="nav-link" href="{% url 'salas' %}"><i class="fas fa-desktop me-2"></i> Salas</a>
+            <a class="nav-link" href="{% url 'dashboard_bolsista' %}"><i class="fas fa-tachometer-alt me-2"></i><span class="sidebar-label">Inicio</span></a>
+            <a class="nav-link" href="{% url 'reservas' %}"><i class="fas fa-calendar-check me-2"></i><span class="sidebar-label">Reservas</span></a>
+            <a class="nav-link" href="{% url 'salas' %}"><i class="fas fa-desktop me-2"></i><span class="sidebar-label">Salas</span></a>
             <a href="{% url 'notificacoes' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if request.resolver_match.url_name == 'notificacoes' %}active{% endif %}">
-    <span>Central de Notificações</span>
+    <span class="sidebar-label">Central de Notificações</span>
     {% if tem_notificacoes_novas %}
         <span class="badge bg-primary rounded-pill" style="width: 12px; height: 12px; p-0">&nbsp;</span>
     {% endif %}
 </a>
-            <a class="nav-link" href="{% url 'login' %}"><i class="fas fa-sign-out-alt me-2"></i> Sair</a>
+            <a class="nav-link" href="{% url 'login' %}"><i class="fas fa-sign-out-alt me-2"></i><span class="sidebar-label">Sair</span></a>
         </nav>
     </div>
 
@@ -331,7 +350,7 @@
             </div>
         </div>
 
-        <div class="row">
+        <div class="row reservas-section">
             <!-- Reservas Recentes -->
             <div class="col-md-8">
                 <div class="card">
