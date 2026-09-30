@@ -25,7 +25,44 @@
             {% endfor %}
         {% endif %}
 
-        {% if reservas %}
+        <!-- Filtro de Tipo de Sala (apenas para professor e bolsista) -->
+        {% if tipo_usuario == 'professor' or tipo_usuario == 'bolsista' %}
+        <div class="card bg-dark bg-opacity-50 border-light shadow mb-4">
+            <div class="card-header bg-dark bg-opacity-75 border-light">
+                <h4 class="text-white mb-0">
+                    <i class="fas fa-filter me-2"></i>Filtrar Salas
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-6">
+                        <label class="form-label text-white fw-bold">Tipo de Sala</label>
+                        <select name="tipo_sala" class="form-select bg-dark text-white border-secondary">
+                            <option value="">Todas as salas</option>
+                            <option value="laboratorio" {% if tipo_filtro == 'laboratorio' %}selected{% endif %}>
+                                <i class="fas fa-desktop me-2"></i>Salas de Informática
+                            </option>
+                            <option value="generica" {% if tipo_filtro == 'generica' %}selected{% endif %}>
+                                <i class="fas fa-door-open me-2"></i>Outras Salas
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter me-2"></i>Aplicar Filtro
+                            </button>
+                            <a href="{% url 'reservas' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Limpar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if reservas or reservas_genericas %}
         <div class="card bg-dark bg-opacity-50 border-light shadow">
             <div class="card-header bg-dark bg-opacity-75 border-light">
                 <h4 class="text-white mb-0">
@@ -41,23 +78,72 @@
                                 <th><i class="fas fa-clock me-1"></i> Horário</th>
                                 <th><i class="fas fa-door-open me-1"></i> Sala</th>
                                 <th><i class="fas fa-desktop me-1"></i> Computador</th>
+                                <th><i class="fas fa-users me-1"></i> Alunos</th>
                                 <th><i class="fas fa-file-alt me-1"></i> Motivo</th>
                                 <th><i class="fas fa-check-circle me-1"></i> Status</th>
                                 <th><i class="fas fa-cog me-1"></i> Ações</th>
                             </tr>
                         </thead>
                         <tbody>
+                            <!-- Reservas de Laboratório -->
                             {% for reserva in reservas %}
                             <tr>
                                 <td class="text-white">{{ reserva.data }}</td>
                                 <td class="text-white">{{ reserva.horario }}</td>
-                                <td class="text-white">{{ reserva.sala.nome }}</td>
+                                <td class="text-white">
+                                    {{ reserva.sala.nome }}
+                                    <span class="badge bg-info ms-2">Lab</span>
+                                </td>
                                 <td class="text-white">
                                     {% if reserva.computador %}
                                         <span class="badge bg-primary">PC {{ reserva.computador.numero }}</span>
                                     {% else %}
                                         <span class="badge bg-secondary">-</span>
                                     {% endif %}
+                                </td>
+                                <td class="text-white">-</td>
+                                <td class="text-white">{{ reserva.motivo|truncatewords:8 }}</td>
+                                <td>
+                                    <span class="badge {% if reserva.presenca == 'presente' %}bg-success{% elif reserva.presenca == 'ausente' %}bg-danger{% else %}bg-warning{% endif %}">
+                                        {{ reserva.get_presenca_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'editar_reserva' reserva.id_reserva %}" class="btn btn-outline-primary" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'cancelar_reserva' reserva.id_reserva %}" class="btn btn-outline-danger" title="Cancelar">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+
+                                        {% if reserva.presenca == 'pendente' %}
+                                            {% if usuario.tipo_usuario == 'bolsista' or reserva.usuario.id == usuario.id %}
+                                                <form method="post" action="{% url 'marcar_presenca' reserva.id_reserva %}" style="display:inline;">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-success" title="Marcar presença">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+
+                            <!-- Reservas de Salas Genéricas -->
+                            {% for reserva in reservas_genericas %}
+                            <tr>
+                                <td class="text-white">{{ reserva.data }}</td>
+                                <td class="text-white">{{ reserva.horario }}</td>
+                                <td class="text-white">
+                                    {{ reserva.sala.nome }}
+                                    <span class="badge bg-success ms-2">Genérica</span>
+                                </td>
+                                <td class="text-white">-</td>
+                                <td class="text-white">
+                                    <span class="badge bg-info">{{ reserva.numero_alunos }}</span>
                                 </td>
                                 <td class="text-white">{{ reserva.motivo|truncatewords:8 }}</td>
                                 <td>
@@ -67,17 +153,16 @@
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <a href="{% url 'editar_reserva' reserva.id_reserva %}" class="btn btn-outline-primary">
+                                        <a href="{% url 'editar_reserva_sala_generica' reserva.id_reserva_generica %}" class="btn btn-outline-primary" title="Editar">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="{% url 'cancelar_reserva' reserva.id_reserva %}" class="btn btn-outline-danger">
+                                        <a href="{% url 'cancelar_reserva_sala_generica' reserva.id_reserva_generica %}" class="btn btn-outline-danger" title="Cancelar">
                                             <i class="fas fa-trash"></i>
                                         </a>
 
-                                        {# Botão marcar presença - visível se estiver pendente e usuário autorizado #}
                                         {% if reserva.presenca == 'pendente' %}
-                                            {% if usuario.tipo_usuario == 'bolsista' or reserva.usuario.id_usuario == usuario.id_usuario %}
-                                                <form method="post" action="{% url 'marcar_presenca' reserva.id_reserva %}" style="display:inline;">
+                                            {% if usuario.tipo_usuario == 'bolsista' or reserva.professor.id == usuario.id %}
+                                                <form method="post" action="{% url 'marcar_presenca_sala_generica' reserva.id_reserva_generica %}" style="display:inline;">
                                                     {% csrf_token %}
                                                     <button type="submit" class="btn btn-sm btn-success" title="Marcar presença">
                                                         <i class="fas fa-check"></i>
@@ -100,9 +185,16 @@
                 <i class="fas fa-calendar-times text-white-50 fa-3x mb-3"></i>
                 <h4 class="text-white">Nenhuma Reserva Encontrada</h4>
                 <p class="text-white-50">Você ainda não fez nenhuma reserva.</p>
-                <a href="{% url 'salas' %}" class="btn btn-primary mt-3">
-                    <i class="fas fa-plus me-2"></i>Fazer Primeira Reserva
-                </a>
+                <div class="mt-3">
+                    <a href="{% url 'salas' %}" class="btn btn-primary me-2">
+                        <i class="fas fa-plus me-2"></i>Reservar Sala de Informática
+                    </a>
+                    {% if tipo_usuario == 'professor' %}
+                    <a href="{% url 'salas_genericas' %}" class="btn btn-success">
+                        <i class="fas fa-plus me-2"></i>Reservar Outra Sala
+                    </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
         {% endif %}

@@ -1,0 +1,164 @@
+{% extends 'SARC/base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container-fluid py-5 page-bg-cover">
+    <div class="container">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold text-white mb-3">Outras Salas</h1>
+            <p class="lead text-white-50">Reservar salas de aula, reunião e outros espaços</p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    <strong>
+                        {% if message.tags == 'success' %}✅ Sucesso!
+                        {% elif message.tags == 'error' %}❌ Erro!
+                        {% elif message.tags == 'warning' %}⚠️ Aviso!
+                        {% else %}ℹ️ Info!{% endif %}
+                    </strong>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Stats Cards -->
+        <div class="row mb-5">
+            <div class="col-md-3">
+                <div class="card bg-dark bg-opacity-50 border-light text-white text-center py-3">
+                    <div class="card-body">
+                        <i class="fas fa-door-open fa-2x mb-2 text-success"></i>
+                        <h3 class="fw-bold text-white">{{ total_salas }}</h3>
+                        <p class="mb-0">Salas Disponíveis</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-dark bg-opacity-50 border-light text-white text-center py-3">
+                    <div class="card-body">
+                        <i class="fas fa-users fa-2x mb-2 text-warning"></i>
+                        <h3 class="fw-bold text-white">
+                            {% for sala in salas %}
+                                {% if forloop.first %}{{ sala.capacidade }}{% endif %}
+                            {% endfor %}
+                        </h3>
+                        <p class="mb-0">Capacidade Média</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-dark bg-opacity-50 border-light text-white text-center py-3">
+                    <div class="card-body">
+                        <i class="fas fa-calendar-check fa-2x mb-2 text-info"></i>
+                        <h3 class="fw-bold text-white">{{ salas_ocupadas_hoje }}</h3>
+                        <p class="mb-0">Ocupadas Hoje</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-dark bg-opacity-50 border-light text-white text-center py-3">
+                    <div class="card-body">
+                        <a href="{% url 'reservar_sala_generica' %}" class="text-decoration-none">
+                            <i class="fas fa-plus fa-2x mb-2 text-primary"></i>
+                            <h5 class="fw-bold text-white">Nova Reserva</h5>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Salas Cards -->
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for sala in salas %}
+            <div class="col">
+                <div class="card sala-card h-100 border-light shadow">
+                    <div class="card-header bg-dark bg-opacity-75 text-white py-3 border-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-door-open me-2 text-success"></i>{{ sala.nome }}
+                            </h5>
+                            {% if sala.status_hoje == 'ocupada' %}
+                                <span class="badge bg-danger">{{ sala.status_hoje|title }}</span>
+                            {% else %}
+                                <span class="badge bg-success">{{ sala.status_hoje|title }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-body text-white">
+                        <div class="info-item mb-3">
+                            <strong><i class="fas fa-tag me-2"></i>Tipo:</strong> {{ sala.get_tipo_display }}
+                        </div>
+                        <div class="info-item mb-3">
+                            <strong><i class="fas fa-users me-2"></i>Capacidade:</strong> {{ sala.capacidade }} pessoas
+                        </div>
+                        {% if sala.descricao %}
+                        <div class="info-item mb-3">
+                            <strong><i class="fas fa-align-left me-2"></i>Descrição:</strong> {{ sala.descricao }}
+                        </div>
+                        {% endif %}
+                        <div class="info-item">
+                            <strong><i class="fas fa-calendar me-2"></i>Reservas Hoje:</strong> {{ sala.reservas_hoje }}
+                        </div>
+                    </div>
+                    <div class="card-footer bg-dark bg-opacity-50 border-light">
+                        <a href="{% url 'reservar_sala_generica_by_id' sala.id_sala_generica %}" class="btn btn-primary w-100">
+                            <i class="fas fa-calendar-plus me-2"></i>Reservar Esta Sala
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info bg-dark bg-opacity-25 border-light text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-white-50 mb-3"></i>
+                    <p class="text-white mb-2">Nenhuma sala genérica disponível no momento.</p>
+                    <a href="{% url 'index' %}" class="btn btn-primary mt-3">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .sala-card {
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .sala-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(255, 255, 255, 0.4);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    .info-item {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .card {
+        backdrop-filter: blur(10px);
+    }
+
+    @media (max-width: 768px) {
+        .display-4 {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+{% endblock %}

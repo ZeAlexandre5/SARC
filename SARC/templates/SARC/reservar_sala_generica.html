@@ -1,0 +1,206 @@
+{% extends 'SARC/base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container-fluid py-5 page-bg-cover">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Header -->
+                <div class="text-center mb-5">
+                    {% if is_editar %}
+                        <h1 class="display-5 fw-bold text-white mb-2">Editar Reserva</h1>
+                        <p class="lead text-white-50">Modifique os dados de sua reserva</p>
+                    {% else %}
+                        <h1 class="display-5 fw-bold text-white mb-2">Reservar Sala</h1>
+                        <p class="lead text-white-50">Preencha as informações abaixo para reservar uma sala</p>
+                    {% endif %}
+                </div>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            <strong>
+                                {% if message.tags == 'success' %}✅ Sucesso!
+                                {% elif message.tags == 'error' %}❌ Erro!
+                                {% elif message.tags == 'warning' %}⚠️ Aviso!
+                                {% else %}ℹ️ Info!{% endif %}
+                            </strong>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- Card Formulário -->
+                <div class="card bg-dark bg-opacity-50 border-light shadow">
+                    <div class="card-header bg-dark bg-opacity-75 text-white py-3 border-light">
+                        <h4 class="mb-0">
+                            <i class="fas fa-clipboard-list me-2"></i>Informações da Reserva
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+
+                            <!-- Sala -->
+                            <div class="mb-3">
+                                <label for="{{ form.sala.id_for_label }}" class="form-label text-white fw-bold">
+                                    <i class="fas fa-door-open me-2"></i>Sala
+                                </label>
+                                {% if is_editar %}
+                                    <input type="text" class="form-control bg-dark text-white border-secondary" 
+                                           value="{{ form.instance.sala.nome }}" disabled>
+                                {% else %}
+                                    {{ form.sala }}
+                                    {% if form.sala.errors %}
+                                        <div class="text-danger mt-2">{{ form.sala.errors }}</div>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+
+                            <!-- Data -->
+                            <div class="mb-3">
+                                <label for="{{ form.data.id_for_label }}" class="form-label text-white fw-bold">
+                                    <i class="fas fa-calendar me-2"></i>Data da Reserva
+                                </label>
+                                {{ form.data }}
+                                {% if form.data.errors %}
+                                    <div class="text-danger mt-2">{{ form.data.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Horário -->
+                            <div class="mb-3">
+                                <label for="{{ form.horario.id_for_label }}" class="form-label text-white fw-bold">
+                                    <i class="fas fa-clock me-2"></i>Horário
+                                </label>
+                                {{ form.horario }}
+                                {% if form.horario.errors %}
+                                    <div class="text-danger mt-2">{{ form.horario.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Número de Alunos -->
+                            <div class="mb-3">
+                                <label for="{{ form.numero_alunos.id_for_label }}" class="form-label text-white fw-bold">
+                                    <i class="fas fa-users me-2"></i>Número de Alunos
+                                </label>
+                                {{ form.numero_alunos }}
+                                {% if form.numero_alunos.errors %}
+                                    <div class="text-danger mt-2">{{ form.numero_alunos.errors }}</div>
+                                {% endif %}
+                                <small class="text-white-50 d-block mt-1">Capacidade máxima: 
+                                    {% if form.instance.sala %}
+                                        {{ form.instance.sala.capacidade }} pessoas
+                                    {% elif sala_selecionada %}
+                                        {{ sala_selecionada.capacidade }} pessoas
+                                    {% endif %}
+                                </small>
+                            </div>
+
+                            <!-- Motivo/Disciplina -->
+                            <div class="mb-3">
+                                <label for="{{ form.motivo.id_for_label }}" class="form-label text-white fw-bold">
+                                    <i class="fas fa-file-alt me-2"></i>Motivo / Disciplina
+                                </label>
+                                {{ form.motivo }}
+                                {% if form.motivo.errors %}
+                                    <div class="text-danger mt-2">{{ form.motivo.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Display de erros gerais -->
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger my-3">
+                                    {% for error in form.non_field_errors %}
+                                        <i class="fas fa-exclamation-triangle me-2"></i>{{ error }}<br>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            <!-- Botões de Ação -->
+                            <div class="border-top border-secondary pt-3 mt-4">
+                                <div class="d-flex gap-3 justify-content-between flex-wrap">
+                                    <a href="{% url 'minhas_reservas_salas_genericas' %}" class="btn btn-outline-secondary px-4">
+                                        <i class="fas fa-arrow-left me-2"></i>Voltar
+                                    </a>
+                                    <button type="submit" class="btn btn-success px-4">
+                                        <i class="fas fa-check me-2"></i>
+                                        {% if is_editar %}Atualizar Reserva{% else %}Confirmar Reserva{% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Info Card -->
+                <div class="card bg-info bg-opacity-10 border-info text-white mt-4">
+                    <div class="card-body">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Importante:</strong> 
+                        <ul class="mb-0 mt-2">
+                            <li>Não é permitido reservar para fins de semana.</li>
+                            <li>O número de alunos não pode exceder a capacidade da sala.</li>
+                            <li>Conflitos de horário não são permitidos.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .form-select {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        color: white !important;
+    }
+
+    .form-control:focus, .form-select:focus {
+        background: rgba(255, 255, 255, 0.15) !important;
+        border-color: #0d6efd !important;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25) !important;
+        color: white !important;
+    }
+
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.6) !important;
+    }
+
+    .form-control option {
+        background: #333;
+        color: white;
+    }
+
+    .card {
+        backdrop-filter: blur(10px);
+    }
+
+    .btn {
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+        transform: scale(1.05);
+    }
+
+    .text-danger {
+        color: #ff6b6b !important;
+    }
+
+    @media (max-width: 768px) {
+        .display-5 {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+{% endblock %}

@@ -48,9 +48,17 @@ class Usuario(AbstractUser):
         return f"{self.nome} ({self.matricula})"
 
 class Sala(models.Model):
+    TIPO_SALA_CHOICES = [
+        ('laboratorio_informatica', 'Laboratório de Informática'),
+        ('sala_aula', 'Sala de Aula'),
+        ('outro', 'Outro'),
+    ]
+    
     id_sala = models.AutoField(primary_key=True)
     nome = models.CharField(max_length=100)
     capacidade = models.IntegerField()
+    tipo = models.CharField(max_length=30, choices=TIPO_SALA_CHOICES, default='laboratorio_informatica')
+    descricao = models.TextField(blank=True, null=True, help_text="Descrição da sala - obrigatória se tipo é 'Outro'")
 
     def __str__(self):
         return f"Sala {self.id_sala} - {self.nome} - Capacidade: {self.capacidade}"
@@ -156,3 +164,52 @@ class ArquivoProjeto(models.Model):
     @property
     def nome(self):
         return self.arquivo.name.rsplit('/', 1)[-1]
+
+
+class SalaGenérica(models.Model):
+    """Salas genéricas para reservas de professores (salas de aula, reuniões, etc.)"""
+    id_sala_generica = models.AutoField(primary_key=True)
+    nome = models.CharField(max_length=100)
+    capacidade = models.IntegerField(help_text="Capacidade máxima de alunos")
+    tipo = models.CharField(max_length=30, choices=TIPO_SALA_CHOICES, default='sala_aula')
+    descricao = models.TextField(blank=True, null=True, help_text="Descrição da sala - obrigatória se tipo é 'Outro'")
+    ativa = models.BooleanField(default=True)
+    criada_em = models.DateTimeField(auto_now_add=True)
+    criada_por = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        ordering = ['nome']
+        verbose_name = "Sala Genérica"
+        verbose_name_plural = "Salas Genéricas"
+
+    def __str__(self):
+        return f"{self.nome} (Cap: {self.capacidade})"
+
+
+class ReservaSalaGenérica(models.Model):
+    """Reservas de salas genéricas - exclusivas para professores"""
+    id_reserva_generica = models.AutoField(primary_key=True)
+    professor = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='reservas_salas_genericas')
+    sala = models.ForeignKey(SalaGenérica, on_delete=models.CASCADE, related_name='reservas')
+    data = models.DateField()
+    horario = models.TimeField()
+    motivo = models.TextField(help_text="Motivo/descrição da reserva")
+    numero_alunos = models.IntegerField(default=1, help_text="Número estimado de alunos")
+    
+    PRESENCA_CHOICES = [
+        ('pendente', 'Pendente'),
+        ('presente', 'Presente'),
+        ('ausente', 'Ausente'),
+    ]
+    presenca = models.CharField(max_length=10, choices=PRESENCA_CHOICES, default='pendente')
+    criada_em = models.DateTimeField(auto_now_add=True)
+    atualizada_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-data', '-horario']
+        unique_together = ['sala', 'data', 'horario']
+        verbose_name = "Reserva de Sala Genérica"
+        verbose_name_plural = "Reservas de Salas Genéricas"
+
+    def __str__(self):
+        return f"Reserva {self.sala.nome} - {self.data} {self.horario}"

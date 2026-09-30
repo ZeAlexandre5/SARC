@@ -1,0 +1,243 @@
+{% extends 'SARC/base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container-fluid py-5 page-bg-cover">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <!-- Header -->
+                <div class="text-center mb-5">
+                    <h1 class="display-5 fw-bold text-white mb-2">Editar Sala</h1>
+                    <p class="lead text-white-50">Modifique as informações da sala genérica</p>
+                </div>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            <strong>
+                                {% if message.tags == 'success' %}✅ Sucesso!
+                                {% elif message.tags == 'error' %}❌ Erro!
+                                {% elif message.tags == 'warning' %}⚠️ Aviso!
+                                {% else %}ℹ️ Info!{% endif %}
+                            </strong>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="row">
+                    <!-- Formulário -->
+                    <div class="col-lg-6">
+                        <div class="card bg-dark bg-opacity-50 border-light shadow">
+                            <div class="card-header bg-dark bg-opacity-75 text-white py-3 border-light">
+                                <h4 class="mb-0">
+                                    <i class="fas fa-edit me-2"></i>Informações da Sala
+                                </h4>
+                            </div>
+                            <div class="card-body">
+                                <form method="post">
+                                    {% csrf_token %}
+
+                                    <div class="mb-3">
+                                        <label class="form-label text-white fw-bold">{{ form.nome.label }}</label>
+                                        {{ form.nome }}
+                                        {% if form.nome.errors %}
+                                            <div class="text-danger mt-2">{{ form.nome.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label text-white fw-bold">{{ form.capacidade.label }}</label>
+                                        {{ form.capacidade }}
+                                        {% if form.capacidade.errors %}
+                                            <div class="text-danger mt-2">{{ form.capacidade.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label text-white fw-bold">{{ form.tipo.label }}</label>
+                                        {{ form.tipo }}
+                                        {% if form.tipo.errors %}
+                                            <div class="text-danger mt-2">{{ form.tipo.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label text-white fw-bold">{{ form.descricao.label }}</label>
+                                        {{ form.descricao }}
+                                        <small class="text-white-50 d-block mt-1">Obrigatória se o tipo for "Outro"</small>
+                                        {% if form.descricao.errors %}
+                                            <div class="text-danger mt-2">{{ form.descricao.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="form-check mb-3">
+                                        {{ form.ativa }}
+                                        <label class="form-check-label text-white" for="{{ form.ativa.id_for_label }}">
+                                            {{ form.ativa.label }}
+                                        </label>
+                                    </div>
+
+                                    {% if form.non_field_errors %}
+                                        <div class="alert alert-danger">
+                                            {% for error in form.non_field_errors %}
+                                                <i class="fas fa-exclamation-triangle me-2"></i>{{ error }}<br>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-success w-100">
+                                            <i class="fas fa-check me-2"></i>Atualizar Sala
+                                        </button>
+                                        <a href="{% url 'gerenciar_salas_genericas' %}" class="btn btn-outline-secondary">
+                                            <i class="fas fa-times me-2"></i>Cancelar
+                                        </a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Info Card -->
+                    <div class="col-lg-6">
+                        <div class="card bg-dark bg-opacity-50 border-light shadow mb-4">
+                            <div class="card-header bg-dark bg-opacity-75 text-white py-3 border-light">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>Informações da Sala
+                                </h5>
+                            </div>
+                            <div class="card-body text-white">
+                                <div class="info-section mb-3">
+                                    <strong><i class="fas fa-door-open me-2"></i>Nome:</strong> {{ sala.nome }}
+                                </div>
+                                <div class="info-section mb-3">
+                                    <strong><i class="fas fa-tag me-2"></i>Tipo:</strong> {{ sala.get_tipo_display }}
+                                </div>
+                                <div class="info-section mb-3">
+                                    <strong><i class="fas fa-users me-2"></i>Capacidade:</strong> {{ sala.capacidade }} pessoas
+                                </div>
+                                {% if sala.descricao %}
+                                <div class="info-section mb-3">
+                                    <strong><i class="fas fa-align-left me-2"></i>Descrição:</strong>
+                                    <p class="text-white-70">{{ sala.descricao }}</p>
+                                </div>
+                                {% endif %}
+                                <div class="info-section">
+                                    <strong><i class="fas fa-toggle-on me-2"></i>Status:</strong>
+                                    {% if sala.ativa %}
+                                        <span class="badge bg-success">Ativa</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inativa</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Últimas Reservas -->
+                        {% if reservas %}
+                        <div class="card bg-dark bg-opacity-50 border-light shadow">
+                            <div class="card-header bg-dark bg-opacity-75 text-white py-3 border-light">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-history me-2"></i>Últimas Reservas
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group list-group-flush">
+                                    {% for reserva in reservas %}
+                                    <div class="list-group-item bg-dark bg-opacity-50 border-secondary mb-2 text-white">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <strong>{{ reserva.professor.nome }}</strong>
+                                                <br>
+                                                <small class="text-white-50">
+                                                    {{ reserva.data|date:"d/m/Y" }} às {{ reserva.horario|time:"H:i" }}
+                                                </small>
+                                            </div>
+                                            <div>
+                                                <span class="badge {% if reserva.presenca == 'presente' %}bg-success{% elif reserva.presenca == 'ausente' %}bg-danger{% else %}bg-warning{% endif %}">
+                                                    {{ reserva.get_presenca_display }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .form-select {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        color: white !important;
+    }
+
+    .form-control:focus, .form-select:focus {
+        background: rgba(255, 255, 255, 0.15) !important;
+        border-color: #0d6efd !important;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25) !important;
+        color: white !important;
+    }
+
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.6) !important;
+    }
+
+    .form-control option {
+        background: #333;
+        color: white;
+    }
+
+    .form-check-input {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    }
+
+    .form-check-input:checked {
+        background-color: #0d6efd !important;
+        border-color: #0d6efd !important;
+    }
+
+    .card {
+        backdrop-filter: blur(10px);
+    }
+
+    .info-section {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .info-section:last-child {
+        border-bottom: none;
+    }
+
+    .text-white-70 {
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .list-group-item {
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    }
+
+    @media (max-width: 768px) {
+        .display-5 {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+{% endblock %}

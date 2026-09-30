@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-from .models import Usuario, Reserva, Sala, Computador, DiaBloqueado, Projeto, AnotacaoProjeto, ArquivoProjeto
+from .models import Usuario, Reserva, Sala, Computador, DiaBloqueado, Projeto, AnotacaoProjeto, ArquivoProjeto, SalaGenérica, ReservaSalaGenérica
 
 # ==========================
 # FORMULÁRIO DE USUÁRIO
@@ -232,11 +232,30 @@ class ProfessorReservaForm(forms.ModelForm):
 class SalaCreateForm(forms.ModelForm):
     class Meta:
         model = Sala
-        fields = ['nome', 'capacidade']
+        fields = ['nome', 'capacidade', 'tipo', 'descricao']
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
             'capacidade': forms.NumberInput(attrs={'class': 'form-control'}),
+            'tipo': forms.Select(attrs={'class': 'form-select', 'id': 'id_tipo_sala'}),
+            'descricao': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Descrição da sala...'}),
         }
+        labels = {
+            'nome': 'Nome da Sala',
+            'capacidade': 'Capacidade',
+            'tipo': 'Tipo de Sala',
+            'descricao': 'Descrição',
+        }
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        tipo = cleaned_data.get('tipo')
+        descricao = cleaned_data.get('descricao')
+        
+        # Se o tipo é 'outro', descrição é obrigatória
+        if tipo == 'outro' and not descricao:
+            raise ValidationError("A descrição é obrigatória quando o tipo de sala é 'Outro'.")
+        
+        return cleaned_data
 
 
 class ComputadorCreateForm(forms.Form):
@@ -302,3 +321,118 @@ class ArquivoProjetoForm(forms.ModelForm):
         fields = ['arquivo']
         widgets = {'arquivo': forms.ClearableFileInput(attrs={'class': 'form-control'})}
         labels = {'arquivo': 'Arquivo'}
+
+
+# ==========================
+# FORMULÁRIOS DE SALAS GENÉRICAS
+# ==========================
+class SalaGenéricaForm(forms.ModelForm):
+    """Formulário para criação/edição de salas genéricas pelo bolsista"""
+    class Meta:
+        model = SalaGenérica
+        fields = ['nome', 'capacidade', 'tipo', 'descricao', 'ativa']
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex.: Sala de aula 101'}),
+            'capacidade': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+            'tipo': forms.Select(attrs={'class': 'form-select'}),
+            'descricao': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Descrição da sala...'}),
+            'ativa': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+        labels = {
+            'nome': 'Nome da Sala',
+            'capacidade': 'Capacidade Máxima de Alunos',
+            'tipo': 'Tipo de Sala',
+            'descricao': 'Descrição',
+            'ativa': 'Ativa',
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        tipo = cleaned_data.get('tipo')
+        descricao = cleaned_data.get('descricao')
+        
+        # Se tipo é 'outro', descricao é obrigatória
+        if tipo == 'outro' and not descricao:
+            raise ValidationError("A descrição é obrigatória quando o tipo de sala é 'Outro'.")
+        
+        return cleaned_data
+
+
+class ReservaSalaGenéricaForm(forms.ModelForm):
+    """Formulário para reserva de salas genéricas por professores"""
+    
+    TIME_CHOICES = [
+        ('07:00:00', '07:00 - 08:30'),
+        ('08:50:00', '08:50 - 10:20'),
+        ('10:30:00', '10:30 - 12:00'),
+        ('13:00:00', '13:00 - 14:30'),
+        ('14:50:00', '14:50 - 16:20'),
+        ('16:30:00', '16:30 - 18:00'),
+    ]
+
+    horario = forms.TimeField(
+        widget=forms.Select(choices=TIME_CHOICES),
+        label="Horário"
+    )
+
+    sala = forms.ModelChoiceField(
+        queryset=SalaGenérica.objects.filter(ativa=True),
+        required=True,
+        label="Sala",
+        widget=forms.Select(attrs={'class': 'form-select', 'id': 'id_sala_generica'})
+    )
+
+    class Meta:
+        model = ReservaSalaGenérica
+        fields = ['sala', 'data', 'horario', 'numero_alunos', 'motivo']
+        widgets = {
+            'data': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'numero_alunos': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+            'motivo': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Motivo da reserva...'}),
+        }
+        labels = {
+            'data': 'Data da Reserva',
+            'numero_alunos': 'Número de Alunos',
+            'motivo': 'Motivo/Disciplina',
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        data = cleaned_data.get('data')
+        horario = cleaned_data.get('horario')
+        sala = cleaned_data.get('sala')
+        numero_alunos = cleaned_data.get('numero_alunos')
+
+        # Verificar data no futuro
+        if data:
+            hoje = timezone.localdate()
+            if data < hoje:
+                raise ValidationError("Não é possível reservar para datas no passado.")
+            # Não permitir fins de semana
+            if data.weekday() in [5, 6]:
+                raise ValidationError("Não é possível reservar para fins de semana.")
+
+        # Verificar conflitos de horário
+        if sala and data and horario:
+            conflito = ReservaSalaGenérica.objects.filter(
+                sala=sala,
+                data=data,
+                horario=horario
+            )
+            if self.instance and self.instance.pk:
+                conflito = conflito.exclude(pk=self.instance.pk)
+            
+            if conflito.exists():
+                raise ValidationError("Já existe uma reserva para esta sala e horário.")
+
+        # Verificar capacidade
+        if sala and numero_alunos and numero_alunos > sala.capacidade:
+            raise ValidationError(
+                f"Número de alunos ({numero_alunos}) excede a capacidade da sala ({sala.capacidade})."
+            )
+
+        # Verificar datas bloqueadas
+        if data and DiaBloqueado.objects.filter(data=data).exists():
+            raise ValidationError("Não é possível reservar para esta data, pois está bloqueada.")
+
+        return cleaned_data

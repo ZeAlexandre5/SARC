@@ -1,0 +1,290 @@
+{% extends 'SARC/base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container-fluid py-5 page-bg-cover">
+    <div class="container">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold text-white mb-3">Gerenciar Salas Genéricas</h1>
+            <p class="lead text-white-50">Administre todas as salas disponíveis para reserva</p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    <strong>
+                        {% if message.tags == 'success' %}✅ Sucesso!
+                        {% elif message.tags == 'error' %}❌ Erro!
+                        {% elif message.tags == 'warning' %}⚠️ Aviso!
+                        {% else %}ℹ️ Info!{% endif %}
+                    </strong>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Stats Cards -->
+        <div class="row mb-5">
+            <div class="col-md-3">
+                <div class="card bg-dark bg-opacity-50 border-light text-white text-center py-3">
+                    <div class="card-body">
+                        <i class="fas fa-door-open fa-2x mb-2 text-success"></i>
+                        <h3 class="fw-bold">{{ total_salas }}</h3>
+                        <p class="mb-0">Total de Salas</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-dark bg-opacity-50 border-light text-white text-center py-3">
+                    <div class="card-body">
+                        <i class="fas fa-check-circle fa-2x mb-2 text-info"></i>
+                        <h3 class="fw-bold">{{ salas_ativas }}</h3>
+                        <p class="mb-0">Salas Ativas</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-dark bg-opacity-50 border-light text-white text-center py-3">
+                    <div class="card-body">
+                        <i class="fas fa-calendar-check fa-2x mb-2 text-warning"></i>
+                        <h3 class="fw-bold">{{ total_reservas }}</h3>
+                        <p class="mb-0">Total de Reservas</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-dark bg-opacity-50 border-light text-white text-center py-3">
+                    <div class="card-body">
+                        <i class="fas fa-calendar-day fa-2x mb-2 text-danger"></i>
+                        <h3 class="fw-bold">{{ reservas_hoje }}</h3>
+                        <p class="mb-0">Reservas Hoje</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form para criar nova sala -->
+        <div class="row mb-5">
+            <div class="col-lg-6">
+                <div class="card bg-dark bg-opacity-50 border-light shadow">
+                    <div class="card-header bg-dark bg-opacity-75 text-white py-3 border-light">
+                        <h4 class="mb-0">
+                            <i class="fas fa-plus-circle me-2"></i>Criar Nova Sala
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="acao" value="criar">
+
+                            <div class="mb-3">
+                                <label class="form-label text-white fw-bold">{{ form.nome.label }}</label>
+                                {{ form.nome }}
+                                {% if form.nome.errors %}
+                                    <div class="text-danger mt-2">{{ form.nome.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-white fw-bold">{{ form.capacidade.label }}</label>
+                                {{ form.capacidade }}
+                                {% if form.capacidade.errors %}
+                                    <div class="text-danger mt-2">{{ form.capacidade.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-white fw-bold">{{ form.tipo.label }}</label>
+                                {{ form.tipo }}
+                                {% if form.tipo.errors %}
+                                    <div class="text-danger mt-2">{{ form.tipo.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-white fw-bold">{{ form.descricao.label }}</label>
+                                {{ form.descricao }}
+                                <small class="text-white-50 d-block mt-1">Obrigatória se o tipo for "Outro"</small>
+                                {% if form.descricao.errors %}
+                                    <div class="text-danger mt-2">{{ form.descricao.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-check mb-3">
+                                {{ form.ativa }}
+                                <label class="form-check-label text-white" for="{{ form.ativa.id_for_label }}">
+                                    {{ form.ativa.label }}
+                                </label>
+                            </div>
+
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {% for error in form.non_field_errors %}
+                                        <i class="fas fa-exclamation-triangle me-2"></i>{{ error }}<br>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fas fa-check me-2"></i>Criar Sala
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="col-lg-6">
+                <div class="card bg-dark bg-opacity-50 border-light shadow">
+                    <div class="card-header bg-dark bg-opacity-75 text-white py-3 border-light">
+                        <h4 class="mb-0">
+                            <i class="fas fa-lightning-bolt me-2"></i>Ações Rápidas
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-white-50 mb-3">Acesso direto a funcionalidades de gerenciamento:</p>
+                        
+                        <a href="{% url 'gerenciar_calendario' %}" class="btn btn-outline-primary w-100 mb-2">
+                            <i class="fas fa-calendar-times me-2"></i>Gerenciar Datas Bloqueadas
+                        </a>
+                        
+                        <a href="{% url 'salas' %}" class="btn btn-outline-secondary w-100 mb-2">
+                            <i class="fas fa-desktop me-2"></i>Gerenciar Salas de Informática
+                        </a>
+
+                        <div class="alert alert-info bg-dark bg-opacity-25 border-info mt-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <small>
+                                <strong>Dica:</strong> Você pode editar ou deletar salas clicando no ícone de ação na tabela abaixo.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Salas -->
+        <div class="card bg-dark bg-opacity-50 border-light shadow">
+            <div class="card-header bg-dark bg-opacity-75 border-light">
+                <h4 class="text-white mb-0">
+                    <i class="fas fa-list me-2"></i>Salas Genéricas Cadastradas
+                </h4>
+            </div>
+            <div class="card-body">
+                {% if salas %}
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-door-open me-1"></i> Nome</th>
+                                <th><i class="fas fa-tag me-1"></i> Tipo</th>
+                                <th><i class="fas fa-users me-1"></i> Capacidade</th>
+                                <th><i class="fas fa-calendar me-1"></i> Reservas</th>
+                                <th><i class="fas fa-toggle-on me-1"></i> Status</th>
+                                <th><i class="fas fa-cog me-1"></i> Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sala in salas %}
+                            <tr>
+                                <td class="text-white">{{ sala.nome }}</td>
+                                <td class="text-white">{{ sala.get_tipo_display }}</td>
+                                <td class="text-white">
+                                    <span class="badge bg-info">{{ sala.capacidade }}</span>
+                                </td>
+                                <td class="text-white">
+                                    <span class="badge bg-warning">{{ sala.reservas.count }}</span>
+                                </td>
+                                <td>
+                                    {% if sala.ativa %}
+                                        <span class="badge bg-success">Ativa</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inativa</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'editar_sala_generica' sala.id_sala_generica %}" class="btn btn-outline-warning" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'deletar_sala_generica' sala.id_sala_generica %}" class="btn btn-outline-danger" title="Deletar">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info bg-dark bg-opacity-25 border-light text-center py-4">
+                    <i class="fas fa-inbox fa-2x text-white-50 mb-2"></i>
+                    <p class="text-white mb-0">Nenhuma sala genérica cadastrada ainda.</p>
+                    <small class="text-white-50">Use o formulário acima para criar uma nova sala.</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .form-select {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        color: white !important;
+    }
+
+    .form-control:focus, .form-select:focus {
+        background: rgba(255, 255, 255, 0.15) !important;
+        border-color: #0d6efd !important;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25) !important;
+        color: white !important;
+    }
+
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.6) !important;
+    }
+
+    .form-control option {
+        background: #333;
+        color: white;
+    }
+
+    .form-check-input {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    }
+
+    .form-check-input:checked {
+        background-color: #0d6efd !important;
+        border-color: #0d6efd !important;
+    }
+
+    .card {
+        backdrop-filter: blur(10px);
+    }
+
+    .table-dark {
+        --bs-table-bg: rgba(0, 0, 0, 0.3);
+        --bs-table-border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .table-hover tbody tr:hover {
+        --bs-table-accent-bg: rgba(255, 255, 255, 0.1);
+    }
+
+    @media (max-width: 768px) {
+        .display-4 {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+{% endblock %}

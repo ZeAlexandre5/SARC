@@ -32,4 +32,15 @@ urlpatterns = [
     path('calendario/', views.gerenciar_calendario, name='gerenciar_calendario'),
     path('calendario/remover_bloqueio/<int:bloqueio_id>/', views.remover_bloqueio, name='remover_bloqueio'),
     path('calendario/datas_bloqueadas/', views.datas_bloqueadas, name='datas_bloqueadas'),
+    # urls salas genéricas
+    path('salas-genericas/', views.salas_genericas, name='salas_genericas'),
+    path('salas-genericas/reservar/', views.reservar_sala_generica, name='reservar_sala_generica'),
+    path('salas-genericas/reservar/<int:id_sala>/', views.reservar_sala_generica, name='reservar_sala_generica_by_id'),
+    path('salas-genericas/minhas-reservas/', views.minhas_reservas_salas_genericas, name='minhas_reservas_salas_genericas'),
+    path('salas-genericas/editar-reserva/<int:id_reserva>/', views.editar_reserva_sala_generica, name='editar_reserva_sala_generica'),
+    path('salas-genericas/cancelar-reserva/<int:id_reserva>/', views.cancelar_reserva_sala_generica, name='cancelar_reserva_sala_generica'),
+    path('salas-genericas/marcar-presenca/<int:id_reserva>/', views.marcar_presenca_sala_generica, name='marcar_presenca_sala_generica'),
+    path('bolsista/salas-genericas/', views.gerenciar_salas_genericas, name='gerenciar_salas_genericas'),
+    path('bolsista/salas-genericas/editar/<int:id_sala>/', views.editar_sala_generica, name='editar_sala_generica'),
+    path('bolsista/salas-genericas/deletar/<int:id_sala>/', views.deletar_sala_generica, name='deletar_sala_generica'),
 ]
