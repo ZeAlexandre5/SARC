@@ -245,11 +245,17 @@ class SalaCreateForm(forms.ModelForm):
             'tipo': 'Tipo de Sala',
             'descricao': 'Descrição',
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['tipo'].required = False
+        self.fields['tipo'].initial = 'laboratorio_informatica'
     
     def clean(self):
         cleaned_data = super().clean()
-        tipo = cleaned_data.get('tipo')
+        tipo = cleaned_data.get('tipo') or 'laboratorio_informatica'
         descricao = cleaned_data.get('descricao')
+        cleaned_data['tipo'] = tipo
         
         # Se o tipo é 'outro', descrição é obrigatória
         if tipo == 'outro' and not descricao:

@@ -656,6 +656,7 @@ def criar_sala(request):
     data = form.cleaned_data
     nome = data.get('nome')
     capacidade = data.get('capacidade')
+    tipo = data.get('tipo') or 'laboratorio_informatica'
     descricao = data.get('descricao')
 
     # montar kwargs de criação incluindo campos obrigatórios do modelo
@@ -679,6 +680,9 @@ def criar_sala(request):
                 create_kwargs['capacidade'] = 0
             else:
                 create_kwargs['capacidade'] = None
+
+    if 'tipo' in {f.name for f in Sala._meta.get_fields() if hasattr(f, 'name')}:
+        create_kwargs['tipo'] = tipo
 
     # descricao (opcional)
     if 'descricao' in {f.name for f in Sala._meta.get_fields() if hasattr(f, 'name')} and descricao:

@@ -29,7 +29,7 @@
     </li>
 
     <li class="nav-item"><a href="{% url 'reservas' %}" class="nav-link {% if request.resolver_match.url_name == 'reservas' %}active{% endif %}">Reservas</a></li>
-    <li class="nav-item"><a href="{% url 'salas' %}" class="nav-link {% if request.resolver_match.url_name == 'salas' %}active{% endif %}">Salas</a></li>
+    <li class="nav-item"><a href="{% url 'salas' %}" class="nav-link {% if request.resolver_match.url_name == 'salas' %}active{% endif %}">Informática</a></li>
     
     {% if request.user.is_authenticated and request.user.tipo_usuario == 'professor' %}
       <li class="nav-item"><a href="{% url 'salas_genericas' %}" class="nav-link {% if request.resolver_match.url_name == 'salas_genericas' %}active{% endif %}">Outras Salas</a></li>
