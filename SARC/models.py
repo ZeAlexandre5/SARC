@@ -168,6 +168,13 @@ class ArquivoProjeto(models.Model):
 
 class SalaGenérica(models.Model):
     """Salas genéricas para reservas de professores (salas de aula, reuniões, etc.)"""
+    TIPO_SALA_CHOICES = [
+        ('sala_aula', 'Sala de Aula'),
+        ('sala_reuniao', 'Sala de Reunião'),
+        ('auditorio', 'Auditório'),
+        ('outro', 'Outro'),
+    ]
+
     id_sala_generica = models.AutoField(primary_key=True)
     nome = models.CharField(max_length=100)
     capacidade = models.IntegerField(help_text="Capacidade máxima de alunos")
