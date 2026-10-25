@@ -1032,7 +1032,7 @@ def reservar_sala_generica(request, id_sala=None):
         sala = get_object_or_404(Sala, id_sala=id_sala, tipo__in=['sala_aula', 'outro'])
 
     if request.method == 'POST':
-        form = ReservaSalaGenéricaForm(request.POST)
+        form = ReservaSalaGenéricaForm(request.POST, sala_selecionada=sala)
         if form.is_valid():
             reserva = form.save(commit=False)
             reserva.professor = usuario
@@ -1047,7 +1047,7 @@ def reservar_sala_generica(request, id_sala=None):
         initial = {}
         if sala:
             initial['sala'] = sala
-        form = ReservaSalaGenéricaForm(initial=initial)
+        form = ReservaSalaGenéricaForm(initial=initial, sala_selecionada=sala)
 
     salas = Sala.objects.filter(tipo__in=['sala_aula', 'outro'])
 

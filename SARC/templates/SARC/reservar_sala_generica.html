@@ -48,14 +48,14 @@
                                 <label for="{{ form.sala.id_for_label }}" class="form-label text-white fw-bold">
                                     <i class="fas fa-door-open me-2"></i>Sala
                                 </label>
-                                {% if is_editar %}
-                                    <input type="text" class="form-control bg-dark text-white border-secondary" 
-                                           value="{{ form.instance.sala.nome }}" disabled>
+                                {% if sala_selecionada %}
+                                    <input type="text" class="form-control bg-dark text-white border-secondary" value="{{ sala_selecionada.nome }}" disabled>
+                                    {{ form.sala }}
                                 {% else %}
                                     {{ form.sala }}
-                                    {% if form.sala.errors %}
-                                        <div class="text-danger mt-2">{{ form.sala.errors }}</div>
-                                    {% endif %}
+                                {% endif %}
+                                {% if form.sala.errors %}
+                                    <div class="text-danger mt-2">{{ form.sala.errors }}</div>
                                 {% endif %}
                             </div>
 

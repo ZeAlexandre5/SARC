@@ -241,7 +241,7 @@ class ReservaSalaGenérica(models.Model):
     """Reservas de salas genéricas - exclusivas para professores"""
     id_reserva_generica = models.AutoField(primary_key=True)
     professor = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='reservas_salas_genericas')
-    sala = models.ForeignKey(SalaGenérica, on_delete=models.CASCADE, related_name='reservas')
+    sala = models.ForeignKey(Sala, on_delete=models.CASCADE, related_name='reservas_outras_salas')
     data = models.DateField()
     horario = models.TimeField()
     motivo = models.TextField(help_text="Motivo/descrição da reserva")

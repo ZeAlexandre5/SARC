@@ -382,7 +382,7 @@ class ReservaSalaGenéricaForm(forms.ModelForm):
     )
 
     sala = forms.ModelChoiceField(
-        queryset=SalaGenérica.objects.filter(ativa=True),
+        queryset=Sala.objects.filter(tipo__in=['sala_aula', 'outro']).order_by('nome'),
         required=True,
         label="Sala",
         widget=forms.Select(attrs={'class': 'form-select', 'id': 'id_sala_generica'})
@@ -402,6 +402,13 @@ class ReservaSalaGenéricaForm(forms.ModelForm):
             'motivo': 'Motivo/Disciplina',
         }
 
+    def __init__(self, *args, sala_selecionada=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if sala_selecionada:
+            self.fields['sala'].initial = sala_selecionada
+            self.fields['sala'].widget = forms.HiddenInput()
+            self.fields['sala'].required = True
+
     def clean(self):
         cleaned_data = super().clean()
         data = cleaned_data.get('data')
@@ -409,16 +416,13 @@ class ReservaSalaGenéricaForm(forms.ModelForm):
         sala = cleaned_data.get('sala')
         numero_alunos = cleaned_data.get('numero_alunos')
 
-        # Verificar data no futuro
         if data:
             hoje = timezone.localdate()
             if data < hoje:
                 raise ValidationError("Não é possível reservar para datas no passado.")
-            # Não permitir fins de semana
             if data.weekday() in [5, 6]:
                 raise ValidationError("Não é possível reservar para fins de semana.")
 
-        # Verificar conflitos de horário
         if sala and data and horario:
             conflito = ReservaSalaGenérica.objects.filter(
                 sala=sala,
@@ -431,13 +435,11 @@ class ReservaSalaGenéricaForm(forms.ModelForm):
             if conflito.exists():
                 raise ValidationError("Já existe uma reserva para esta sala e horário.")
 
-        # Verificar capacidade
         if sala and numero_alunos and numero_alunos > sala.capacidade:
             raise ValidationError(
                 f"Número de alunos ({numero_alunos}) excede a capacidade da sala ({sala.capacidade})."
             )
 
-        # Verificar datas bloqueadas
         if data and DiaBloqueado.objects.filter(data=data).exists():
             raise ValidationError("Não é possível reservar para esta data, pois está bloqueada.")
 
