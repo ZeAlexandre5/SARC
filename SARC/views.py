@@ -183,10 +183,9 @@ def reserva(request):
 def salas(request):
     today = date.today()
 
+    salas = Sala.objects.filter(tipo='laboratorio_informatica').order_by('nome')
     reservas = Reserva.objects.filter(data=today)
-    salas = Sala.objects.all()
 
-    # 🔥 CÁLCULOS CORRETOS
     total_computadores = 0
     total_vagas = 0
 
@@ -199,9 +198,74 @@ def salas(request):
         'reservas': reservas,
         'total_computadores': total_computadores,
         'total_vagas': total_vagas,
+        'tipo_usuario': request.user.tipo_usuario,
     }
 
     return render(request, "SARC/salas.html", context)
+
+
+@login_required
+def salas_genericas(request):
+    """Lista apenas salas de aula e outros espaços para professores."""
+    salas = Sala.objects.filter(tipo__in=['sala_aula', 'outro']).order_by('nome')
+
+    hoje = date.today()
+    salas_com_reservas_hoje = Reserva.objects.filter(
+        sala__in=salas,
+        data=hoje
+    ).values_list('sala_id', flat=True).distinct()
+
+    for sala in salas:
+        sala.reservas_hoje = Reserva.objects.filter(sala=sala, data=hoje).count()
+        sala.status_hoje = 'ocupada' if sala.id_sala in salas_com_reservas_hoje else 'disponível'
+
+    context = {
+        'salas': salas,
+        'total_salas': salas.count(),
+        'salas_ocupadas_hoje': len(salas_com_reservas_hoje),
+        'tipo_usuario': request.user.tipo_usuario,
+    }
+    return render(request, 'SARC/salas_genericas.html', context)
+
+
+@login_required
+def gerenciar_salas_genericas(request):
+    """Bolsista gerencia todas as salas em uma única página."""
+    usuario = request.user
+
+    if usuario.tipo_usuario != 'bolsista':
+        messages.error(request, 'Apenas bolsistas podem acessar esta página.')
+        return redirect('salas')
+
+    salas = Sala.objects.all().order_by('nome')
+    for sala in salas:
+        sala.total_reservas = Reserva.objects.filter(sala=sala).count()
+
+    total_salas = salas.count()
+    total_reservas = Reserva.objects.count()
+    reservas_hoje = Reserva.objects.filter(data=date.today()).count()
+
+    if request.method == 'POST':
+        form = SalaCreateForm(request.POST)
+        if form.is_valid():
+            sala = form.save(commit=False)
+            sala.save()
+            messages.success(request, f'Sala "{sala.nome}" criada com sucesso!')
+            return redirect('gerenciar_salas_genericas')
+    else:
+        form = SalaCreateForm()
+
+    context = {
+        'form': form,
+        'salas': salas,
+        'total_salas': total_salas,
+        'salas_ativas': total_salas,
+        'total_reservas': total_reservas,
+        'reservas_hoje': reservas_hoje,
+    }
+    return render(request, 'SARC/gerenciar_salas_genericas.html', context)
+
+
 @login_required
 def reservar_sala(request, id_sala=None):
     sala = None
@@ -932,42 +996,41 @@ def datas_bloqueadas(request):
 
 @login_required
 def salas_genericas(request):
-    """Lista todas as salas genéricas disponíveis"""
-    salas = SalaGenérica.objects.filter(ativa=True).order_by('nome')
-    
-    # Contar reservas por sala hoje
+    """Lista apenas salas de aula e outros espaços para professores."""
+    salas = Sala.objects.filter(tipo__in=['sala_aula', 'outro']).order_by('nome')
+
     hoje = date.today()
-    salas_com_reservas_hoje = ReservaSalaGenérica.objects.filter(
+    salas_com_reservas_hoje = Reserva.objects.filter(
         sala__in=salas,
         data=hoje
     ).values_list('sala_id', flat=True).distinct()
-    
+
     for sala in salas:
-        sala.reservas_hoje = sala.reservas.filter(data=hoje).count()
-        sala.status_hoje = 'ocupada' if sala.id_sala_generica in salas_com_reservas_hoje else 'disponível'
-    
+        sala.reservas_hoje = Reserva.objects.filter(sala=sala, data=hoje).count()
+        sala.status_hoje = 'ocupada' if sala.id_sala in salas_com_reservas_hoje else 'disponível'
+
     context = {
         'salas': salas,
         'total_salas': salas.count(),
         'salas_ocupadas_hoje': len(salas_com_reservas_hoje),
+        'tipo_usuario': request.user.tipo_usuario,
     }
     return render(request, 'SARC/salas_genericas.html', context)
 
 
 @login_required
 def reservar_sala_generica(request, id_sala=None):
-    """Permite que professores reservem salas genéricas"""
+    """Permite que professores reservem salas genéricas."""
     usuario = request.user
-    
-    # Apenas professores podem reservar salas genéricas
+
     if usuario.tipo_usuario != 'professor':
         messages.error(request, 'Apenas professores podem reservar salas genéricas.')
         return redirect('salas_genericas')
-    
+
     sala = None
     if id_sala:
-        sala = get_object_or_404(SalaGenérica, id_sala_generica=id_sala, ativa=True)
-    
+        sala = get_object_or_404(Sala, id_sala=id_sala, tipo__in=['sala_aula', 'outro'])
+
     if request.method == 'POST':
         form = ReservaSalaGenéricaForm(request.POST)
         if form.is_valid():
@@ -985,9 +1048,9 @@ def reservar_sala_generica(request, id_sala=None):
         if sala:
             initial['sala'] = sala
         form = ReservaSalaGenéricaForm(initial=initial)
-    
-    salas = SalaGenérica.objects.filter(ativa=True)
-    
+
+    salas = Sala.objects.filter(tipo__in=['sala_aula', 'outro'])
+
     context = {
         'form': form,
         'salas': salas,
@@ -998,17 +1061,17 @@ def reservar_sala_generica(request, id_sala=None):
 
 @login_required
 def minhas_reservas_salas_genericas(request):
-    """Mostra as reservas de salas genéricas do professor logado"""
+    """Mostra as reservas de salas genéricas do professor logado."""
     usuario = request.user
-    
+
     if usuario.tipo_usuario != 'professor':
         messages.error(request, 'Você não tem acesso a esta página.')
         return redirect('salas_genericas')
-    
+
     reservas = ReservaSalaGenérica.objects.filter(
         professor=usuario
     ).select_related('sala').order_by('-data', '-horario')
-    
+
     context = {
         'reservas': reservas,
         'total_reservas': reservas.count(),
@@ -1018,15 +1081,14 @@ def minhas_reservas_salas_genericas(request):
 
 @login_required
 def editar_reserva_sala_generica(request, id_reserva):
-    """Permite que o professor edite sua reserva de sala genérica"""
+    """Permite que o professor edite sua reserva de sala genérica."""
     usuario = request.user
     reserva = get_object_or_404(ReservaSalaGenérica, id_reserva_generica=id_reserva)
-    
-    # Apenas o próprio professor ou bolsista podem editar
+
     if usuario.tipo_usuario != 'bolsista' and reserva.professor != usuario:
         messages.error(request, 'Você não tem permissão para editar esta reserva.')
         return redirect('minhas_reservas_salas_genericas')
-    
+
     if request.method == 'POST':
         form = ReservaSalaGenéricaForm(request.POST, instance=reserva)
         if form.is_valid():
@@ -1042,7 +1104,7 @@ def editar_reserva_sala_generica(request, id_reserva):
                     messages.error(request, f'{field}: {error}')
     else:
         form = ReservaSalaGenéricaForm(instance=reserva)
-    
+
     context = {
         'form': form,
         'reserva': reserva,
@@ -1053,14 +1115,14 @@ def editar_reserva_sala_generica(request, id_reserva):
 
 @login_required
 def cancelar_reserva_sala_generica(request, id_reserva):
-    """Cancela uma reserva de sala genérica"""
+    """Cancela uma reserva de sala genérica."""
     usuario = request.user
     reserva = get_object_or_404(ReservaSalaGenérica, id_reserva_generica=id_reserva)
-    
+
     if usuario.tipo_usuario != 'bolsista' and reserva.professor != usuario:
         messages.error(request, 'Você não tem permissão para cancelar esta reserva.')
         return redirect('minhas_reservas_salas_genericas')
-    
+
     if request.method == 'POST':
         reserva.delete()
         messages.success(request, 'Reserva cancelada com sucesso!')
@@ -1068,72 +1130,22 @@ def cancelar_reserva_sala_generica(request, id_reserva):
             return redirect('gerenciar_salas_genericas')
         else:
             return redirect('minhas_reservas_salas_genericas')
-    
+
     context = {'reserva': reserva}
     return render(request, 'SARC/cancelar_reserva_sala_generica.html', context)
-
-
-@login_required
-def gerenciar_salas_genericas(request):
-    """Bolsista gerencia todas as salas genéricas"""
-    usuario = request.user
-    
-    if usuario.tipo_usuario != 'bolsista':
-        messages.error(request, 'Apenas bolsistas podem acessar esta página.')
-        return redirect('salas_genericas')
-    
-    salas = SalaGenérica.objects.all().order_by('nome')
-    
-    # Estatísticas
-    total_salas = salas.count()
-    salas_ativas = salas.filter(ativa=True).count()
-    total_reservas = ReservaSalaGenérica.objects.count()
-    reservas_hoje = ReservaSalaGenérica.objects.filter(data=date.today()).count()
-    
-    if request.method == 'POST':
-        acao = request.POST.get('acao')
-        
-        if acao == 'criar':
-            form = SalaGenéricaForm(request.POST)
-            if form.is_valid():
-                sala = form.save(commit=False)
-                sala.criada_por = usuario
-                sala.save()
-                messages.success(request, f'Sala "{sala.nome}" criada com sucesso!')
-                return redirect('gerenciar_salas_genericas')
-        elif acao == 'editar':
-            sala_id = request.POST.get('sala_id')
-            sala = get_object_or_404(SalaGenérica, id_sala_generica=sala_id)
-            form = SalaGenéricaForm(request.POST, instance=sala)
-            if form.is_valid():
-                form.save()
-                messages.success(request, f'Sala "{sala.nome}" atualizada com sucesso!')
-                return redirect('gerenciar_salas_genericas')
-    else:
-        form = SalaGenéricaForm()
-    
-    context = {
-        'form': form,
-        'salas': salas,
-        'total_salas': total_salas,
-        'salas_ativas': salas_ativas,
-        'total_reservas': total_reservas,
-        'reservas_hoje': reservas_hoje,
-    }
-    return render(request, 'SARC/gerenciar_salas_genericas.html', context)
 
 
 @login_required
 def editar_sala_generica(request, id_sala):
     """Edita uma sala genérica (bolsista)"""
     usuario = request.user
-    
+
     if usuario.tipo_usuario != 'bolsista':
         messages.error(request, 'Apenas bolsistas podem editar salas.')
         return redirect('salas_genericas')
-    
+
     sala = get_object_or_404(SalaGenérica, id_sala_generica=id_sala)
-    
+
     if request.method == 'POST':
         form = SalaGenéricaForm(request.POST, instance=sala)
         if form.is_valid():
@@ -1146,10 +1158,9 @@ def editar_sala_generica(request, id_sala):
                     messages.error(request, f'{field}: {error}')
     else:
         form = SalaGenéricaForm(instance=sala)
-    
-    # Reservas da sala
+
     reservas = sala.reservas.select_related('professor').order_by('-data', '-horario')[:10]
-    
+
     context = {
         'form': form,
         'sala': sala,
@@ -1162,18 +1173,18 @@ def editar_sala_generica(request, id_sala):
 def deletar_sala_generica(request, id_sala):
     """Deletar uma sala genérica (bolsista)"""
     usuario = request.user
-    
+
     if usuario.tipo_usuario != 'bolsista':
         return JsonResponse({'error': 'forbidden'}, status=403)
-    
+
     sala = get_object_or_404(SalaGenérica, id_sala_generica=id_sala)
-    
+
     if request.method == 'POST':
         nome_sala = sala.nome
         sala.delete()
         messages.success(request, f'Sala "{nome_sala}" deletada com sucesso!')
         return redirect('gerenciar_salas_genericas')
-    
+
     context = {'sala': sala}
     return render(request, 'SARC/deletar_sala_generica.html', context)
 
@@ -1183,33 +1194,31 @@ def marcar_presenca_sala_generica(request, id_reserva):
     """Marca presença em uma reserva de sala genérica"""
     if request.method != 'POST':
         return redirect('minhas_reservas_salas_genericas')
-    
+
     usuario = request.user
     reserva = get_object_or_404(ReservaSalaGenérica, id_reserva_generica=id_reserva)
-    
-    # Bolsista pode marcar qualquer; professor só a sua
+
     if usuario.tipo_usuario != 'bolsista' and reserva.professor != usuario:
         messages.error(request, 'Você não tem permissão para marcar presença nesta reserva.')
         return redirect('minhas_reservas_salas_genericas')
-    
-    # Impedir marcação se já expirou (24h após horário)
+
     try:
         scheduled = datetime.combine(reserva.data, reserva.horario)
         if timezone.is_naive(scheduled):
             scheduled = timezone.make_aware(scheduled, timezone.get_current_timezone())
     except Exception:
         scheduled = None
-    
+
     now = timezone.now()
     if scheduled and scheduled + timedelta(hours=24) < now:
         messages.error(request, 'Prazo para registrar presença expirado.')
         return redirect('minhas_reservas_salas_genericas')
-    
+
     if reserva.presenca == 'presente':
         messages.info(request, 'Presença já registrada.')
     else:
         reserva.presenca = 'presente'
         reserva.save(update_fields=['presenca'])
         messages.success(request, 'Presença registrada com sucesso!')
-    
+
     return redirect('minhas_reservas_salas_genericas')

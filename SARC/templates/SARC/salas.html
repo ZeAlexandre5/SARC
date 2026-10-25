@@ -6,7 +6,13 @@
     <div class="container">
         <!-- Header -->
         <div class="text-center mb-5">
-            <h1 class="display-4 fw-bold text-white mb-3"> Salas de Informática</h1>
+            <h1 class="display-4 fw-bold text-white mb-3">
+                {% if request.user.is_authenticated and request.user.tipo_usuario == 'aluno' %}
+                    Salas
+                {% else %}
+                    Salas de Informática
+                {% endif %}
+            </h1>
             <p class="lead text-white-50">Selecione uma sala para fazer sua reserva</p>
         </div>
 
