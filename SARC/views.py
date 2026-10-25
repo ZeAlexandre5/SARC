@@ -661,21 +661,14 @@ def criar_sala(request):
 
     # montar kwargs de criação incluindo campos obrigatórios do modelo
     create_kwargs = {}
-    # nome
-    # tenta nome exato do modelo ('nome' ou outro)
     if 'nome' in {f.name for f in Sala._meta.get_fields() if hasattr(f, 'name')}:
         create_kwargs['nome'] = nome
-    else:
-        # fallback: usa primeiro campo de texto se houver (não ideal, mas evita crash)
-        pass
 
-    # capacidade (respeitar se campo existe e se permite null)
     if 'capacidade' in {f.name for f in Sala._meta.get_fields() if hasattr(f, 'name')}:
         field = Sala._meta.get_field('capacidade')
         if capacidade is not None and capacidade != '':
             create_kwargs['capacidade'] = capacidade
         else:
-            # se o campo não permite NULL, forneça fallback 0
             if not getattr(field, 'null', False):
                 create_kwargs['capacidade'] = 0
             else:
@@ -684,16 +677,30 @@ def criar_sala(request):
     if 'tipo' in {f.name for f in Sala._meta.get_fields() if hasattr(f, 'name')}:
         create_kwargs['tipo'] = tipo
 
-    # descricao (opcional)
     if 'descricao' in {f.name for f in Sala._meta.get_fields() if hasattr(f, 'name')} and descricao:
         create_kwargs['descricao'] = descricao
 
     try:
         sala = Sala.objects.create(**create_kwargs)
+        computadores = []
+        if sala.tipo == 'laboratorio_informatica':
+            computadores = [
+                {'id': computador.id_computador, 'numero': computador.numero, 'estado': computador.estado}
+                for computador in sala.criar_computadores_automaticos()
+            ]
     except Exception as e:
         return JsonResponse({'error': 'db_error', 'detail': str(e)}, status=500)
 
-    return JsonResponse({'success': True, 'sala': {'id': getattr(sala, 'id', getattr(sala, 'id_sala', None)), 'nome': getattr(sala, 'nome', nome)}})
+    return JsonResponse({
+        'success': True,
+        'sala': {
+            'id': getattr(sala, 'id', getattr(sala, 'id_sala', None)),
+            'nome': getattr(sala, 'nome', nome),
+            'capacidade': getattr(sala, 'capacidade', capacidade),
+            'tipo': getattr(sala, 'tipo', tipo),
+        },
+        'computadores': computadores,
+    })
 
 
 @require_POST

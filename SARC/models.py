@@ -60,6 +60,46 @@ class Sala(models.Model):
     tipo = models.CharField(max_length=30, choices=TIPO_SALA_CHOICES, default='laboratorio_informatica')
     descricao = models.TextField(blank=True, null=True, help_text="Descrição da sala - obrigatória se tipo é 'Outro'")
 
+    class Meta:
+        verbose_name = 'Sala'
+        verbose_name_plural = 'Salas'
+
+    def criar_computadores_automaticos(self):
+        if self.tipo != 'laboratorio_informatica':
+            return []
+
+        capacidade = int(self.capacidade or 0)
+        if capacidade < 1:
+            return []
+
+        numeros_usados = set()
+        for computador in Computador.objects.filter(sala=self):
+            try:
+                numeros_usados.add(int(str(computador.numero)))
+            except (TypeError, ValueError):
+                continue
+
+        computadores_criados = []
+        for numero in range(1, capacidade + 1):
+            if numero in numeros_usados:
+                continue
+
+            computador = Computador.objects.create(
+                sala=self,
+                numero=str(numero),
+                estado='Disponível'
+            )
+            computadores_criados.append(computador)
+
+        return computadores_criados
+
+    def save(self, *args, **kwargs):
+        creating = self.pk is None
+        super().save(*args, **kwargs)
+
+        if creating and self.tipo == 'laboratorio_informatica':
+            self.criar_computadores_automaticos()
+
     def __str__(self):
         return f"Sala {self.id_sala} - {self.nome} - Capacidade: {self.capacidade}"
     
@@ -67,8 +107,12 @@ class Computador(models.Model):
     id_computador = models.AutoField(primary_key=True)
     sala = models.ForeignKey(Sala, on_delete=models.CASCADE)
     numero = models.CharField(max_length=10)
-    estado = models.CharField(max_length=20, default='Disponível') 
+    estado = models.CharField(max_length=20, default='Disponível')
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['sala', 'numero'], name='unique_numero_por_sala')
+        ]
 
     def __str__(self):
         return f"Computador {self.id_computador} - Sala: {self.sala.nome} - Número: {self.numero}"
