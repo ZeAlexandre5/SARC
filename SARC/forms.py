@@ -296,7 +296,7 @@ class ProjetoForm(forms.ModelForm):
         }
         labels = {
             'titulo': 'Nome do projeto', 'descricao': 'Descrição', 'data_inicio': 'Data de início',
-            'data_limite': 'Data limite de entrega', 'participantes': 'Participantes (IDs de usuários)',
+            'data_limite': 'Data limite de entrega', 'participantes': 'Participantes',
         }
 
     def __init__(self, *args, usuario=None, **kwargs):
@@ -304,7 +304,9 @@ class ProjetoForm(forms.ModelForm):
         # O criador é incluído pela view mesmo que não selecione outros usuários.
         self.fields['participantes'].required = False
         self.fields['participantes'].queryset = Usuario.objects.order_by('nome', 'matricula')
-        self.fields['participantes'].label_from_instance = lambda usuario: f"ID {usuario.pk} — {usuario.nome or 'Sem nome'} ({usuario.matricula})"
+        self.fields['participantes'].label_from_instance = lambda usuario_obj: (
+            f"{usuario_obj.nome or 'Sem nome'} ({usuario_obj.matricula or 'Sem matrícula'})"
+        )
 
     def clean(self):
         cleaned_data = super().clean()

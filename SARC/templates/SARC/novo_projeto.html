@@ -1,5 +1,77 @@
 {% extends 'SARC/base.html' %}
 {% block title %}Novo projeto - SARC{% endblock %}
 {% block content %}
-<div class="container py-5" style="max-width: 850px;"><a href="{% url 'projetos' %}" class="text-muted"><i class="fas fa-arrow-left me-2"></i>Voltar aos projetos</a><div class="card border-0 shadow-sm mt-3"><div class="card-body p-4 p-md-5"><h1 class="h3 fw-bold mb-1">Novo projeto</h1><p class="text-muted mb-4">Selecione um ou mais usuários pelos respectivos IDs para compartilhar o projeto.</p><form method="post" novalidate>{% csrf_token %}{% for erro in form.non_field_errors %}<div class="alert alert-danger">{{ erro }}</div>{% endfor %}<div class="mb-3"><label for="{{ form.titulo.id_for_label }}" class="form-label">{{ form.titulo.label }}</label>{{ form.titulo }}{{ form.titulo.errors }}</div><div class="mb-3"><label for="{{ form.descricao.id_for_label }}" class="form-label">{{ form.descricao.label }}</label>{{ form.descricao }}{{ form.descricao.errors }}</div><div class="row"><div class="col-md-6 mb-3"><label for="{{ form.data_inicio.id_for_label }}" class="form-label">{{ form.data_inicio.label }}</label>{{ form.data_inicio }}{{ form.data_inicio.errors }}</div><div class="col-md-6 mb-3"><label for="{{ form.data_limite.id_for_label }}" class="form-label">{{ form.data_limite.label }}</label>{{ form.data_limite }}{{ form.data_limite.errors }}</div></div><div class="mb-4"><label for="{{ form.participantes.id_for_label }}" class="form-label">{{ form.participantes.label }}</label>{{ form.participantes }}<div class="form-text">Use Ctrl (ou Cmd) para selecionar mais de um usuário. Você será incluído automaticamente.</div>{{ form.participantes.errors }}</div><button type="submit" class="btn btn-primary px-4"><i class="fas fa-check me-2"></i>Criar projeto</button></form></div></div></div>
+<div class="container py-5" style="max-width: 850px;"><a href="{% url 'projetos' %}" class="text-muted"><i class="fas fa-arrow-left me-2"></i>Voltar aos projetos</a><div class="card border-0 shadow-sm mt-3"><div class="card-body p-4 p-md-5"><h1 class="h3 fw-bold mb-1">Novo projeto</h1><p class="text-muted mb-4">Selecione participantes pelo nome ou matrícula. Você será incluído automaticamente.</p><form method="post" novalidate>{% csrf_token %}{% for erro in form.non_field_errors %}<div class="alert alert-danger">{{ erro }}</div>{% endfor %}<div class="mb-3"><label for="{{ form.titulo.id_for_label }}" class="form-label">{{ form.titulo.label }}</label>{{ form.titulo }}{{ form.titulo.errors }}</div><div class="mb-3"><label for="{{ form.descricao.id_for_label }}" class="form-label">{{ form.descricao.label }}</label>{{ form.descricao }}{{ form.descricao.errors }}</div><div class="row"><div class="col-md-6 mb-3"><label for="{{ form.data_inicio.id_for_label }}" class="form-label">{{ form.data_inicio.label }}</label>{{ form.data_inicio }}{{ form.data_inicio.errors }}</div><div class="col-md-6 mb-3"><label for="{{ form.data_limite.id_for_label }}" class="form-label">{{ form.data_limite.label }}</label>{{ form.data_limite }}{{ form.data_limite.errors }}</div></div><div class="mb-4"><label for="{{ form.participantes.id_for_label }}" class="form-label">{{ form.participantes.label }}</label><input type="text" id="participantePesquisa" class="form-control mb-2" placeholder="Buscar por nome ou matrícula..."><div id="participantesSelecionados" class="d-flex flex-wrap gap-2 mb-3"></div>{{ form.participantes }}<div class="form-text">Use Ctrl (ou Cmd) para selecionar mais de um usuário.</div>{{ form.participantes.errors }}</div><button type="submit" class="btn btn-primary px-4"><i class="fas fa-check me-2"></i>Criar projeto</button></form></div></div></div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const select = document.getElementById('{{ form.participantes.id_for_label }}');
+        const search = document.getElementById('participantePesquisa');
+        const selectedList = document.getElementById('participantesSelecionados');
+
+        if (!select || !search || !selectedList) return;
+
+        const normalize = value => (value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+        const renderSelectedList = () => {
+            selectedList.innerHTML = '';
+
+            const selectedOptions = Array.from(select.selectedOptions);
+
+            if (!selectedOptions.length) {
+                selectedList.innerHTML = '<span class="text-muted small">Nenhum usuário selecionado.</span>';
+                return;
+            }
+
+            selectedOptions.forEach(option => {
+                const chip = document.createElement('span');
+                chip.className = 'badge rounded-pill text-bg-light border d-inline-flex align-items-center gap-2 px-2 py-1';
+
+                const label = document.createElement('span');
+                label.textContent = option.textContent;
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'btn-close';
+                removeBtn.setAttribute('aria-label', 'Remover usuário');
+                removeBtn.style.fontSize = '0.58rem';
+                removeBtn.style.opacity = '0.75';
+                removeBtn.addEventListener('click', function () {
+                    option.selected = false;
+                    renderSelectedList();
+                });
+
+                chip.appendChild(label);
+                chip.appendChild(removeBtn);
+                selectedList.appendChild(chip);
+            });
+        };
+
+        const applyFilter = () => {
+            const query = normalize(search.value.trim());
+            const hasQuery = query.length > 0;
+
+            select.style.display = hasQuery ? 'block' : 'none';
+            select.setAttribute('aria-hidden', String(!hasQuery));
+
+            Array.from(select.options).forEach(option => {
+                const text = normalize(option.textContent);
+                const match = !query || text.includes(query);
+                option.hidden = !match;
+                option.disabled = !match;
+            });
+
+            if (!hasQuery) {
+                Array.from(select.options).forEach(option => {
+                    option.selected = false;
+                });
+            }
+        };
+
+        select.addEventListener('change', renderSelectedList);
+        search.addEventListener('input', applyFilter);
+
+        renderSelectedList();
+        applyFilter();
+    });
+</script>
 {% endblock %}
